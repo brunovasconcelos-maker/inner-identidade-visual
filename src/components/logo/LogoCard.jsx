@@ -36,6 +36,7 @@ export default function LogoCard({
   onOpenMenu,
   onCloseMenu,
   onAction,
+  onOpen,
 }) {
   const type = findLogoType(logo.type)
   const url = useObjectUrl(logo.file)
@@ -74,8 +75,19 @@ export default function LogoCard({
   return (
     <div className={classes}>
       <div className="logo-card__top">
-        {/* Clicking the preview does nothing yet: it will open the viewer. */}
-        <div className="logo-card__preview">
+        <div
+          className="logo-card__preview"
+          role="button"
+          tabIndex={0}
+          aria-label={`Abrir ${type.label}`}
+          onClick={() => onOpen(logo.id)}
+          onKeyDown={(event) => {
+            if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
+              event.preventDefault()
+              onOpen(logo.id)
+            }
+          }}
+        >
           {url ? <img className="logo-card__img" src={url} alt={type.label} /> : null}
           <button
             type="button"
@@ -83,7 +95,10 @@ export default function LogoCard({
             role="checkbox"
             aria-checked={selected}
             aria-label={`Selecionar ${type.label}`}
-            onClick={() => onToggleSelect(logo.id)}
+            onClick={(event) => {
+              event.stopPropagation()
+              onToggleSelect(logo.id)
+            }}
           >
             {selected ? (
               <CheckSquare size={24} color="#000000" weight="fill" />
@@ -91,7 +106,7 @@ export default function LogoCard({
               <Square size={24} color="#5d5d5d" weight="regular" />
             )}
           </button>
-          <div className="logo-card__kebab" ref={kebabRef}>
+          <div className="logo-card__kebab" ref={kebabRef} onClick={(event) => event.stopPropagation()}>
             <button
               type="button"
               className="logo-card__kebab-btn"

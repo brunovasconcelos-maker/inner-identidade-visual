@@ -6,6 +6,7 @@ import Breadcrumb from '../components/Breadcrumb.jsx'
 import ExpandableSearch from '../components/ExpandableSearch.jsx'
 import AddCard from '../components/AddCard.jsx'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
+import LogoViewer from '../components/logo/LogoViewer.jsx'
 import LogoCard from '../components/logo/LogoCard.jsx'
 import NewLogoModal from '../components/logo/NewLogoModal.jsx'
 import SelectionBar from '../components/logo/SelectionBar.jsx'
@@ -27,7 +28,7 @@ function logoMatches(logo, term) {
 
 export default function FolderPage() {
   const { id, section } = useParams()
-  const { identities, loading, addLogo, deleteLogos } = useIdentities()
+  const { identities, loading, addLogo, updateLogo, deleteLogos } = useIdentities()
   const identity = identities.find((item) => item.id === id)
   const folder = findFolder(section)
 
@@ -41,6 +42,7 @@ export default function FolderPage() {
   const [deleteTarget, setDeleteTarget] = useState(null) // logo ids waiting for confirmation
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState(null)
+  const [viewerId, setViewerId] = useState(null) // logo open in the viewer
   const shareTimer = useRef(null)
 
   const isLogoFolder = section === 'logo'
@@ -83,12 +85,12 @@ export default function FolderPage() {
         }
         return
       }
-      if (upload || searchOpen) return
+      if (upload || searchOpen || viewerId) return
       if (selectedIds.length > 0) setSelectedIds([])
     }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
-  }, [deleteTarget, deleting, upload, searchOpen, selectedIds])
+  }, [deleteTarget, deleting, upload, searchOpen, selectedIds, viewerId])
 
   useEffect(() => () => clearTimeout(shareTimer.current), [])
 
@@ -149,14 +151,23 @@ export default function FolderPage() {
     if (action === 'download') handleDownload([logo.id])
     else if (action === 'share') showShareTip(logo.id)
     else if (action === 'delete') setDeleteTarget([logo.id])
-    // "Editar": no action yet, it will open the viewer.
+    else if (action === 'edit') setViewerId(logo.id)
   }
 
   async function confirmDelete() {
     setDeleting(true)
     setDeleteError(null)
     try {
+      const nextViewer = (() => {
+        if (!viewerId || !deleteTarget.includes(viewerId)) return undefined
+        const at = visibleLogos.findIndex((logo) => logo.id === viewerId)
+        const rest = visibleLogos.filter((logo) => !deleteTarget.includes(logo.id))
+        const following = visibleLogos.slice(at + 1).find((logo) => rest.includes(logo))
+        const before = visibleLogos.slice(0, at).reverse().find((logo) => rest.includes(logo))
+        return following ? following.id : before ? before.id : null
+      })()
       await deleteLogos(identity.id, deleteTarget)
+      if (nextViewer !== undefined) setViewerId(nextViewer)
       setSelectedIds((current) => current.filter((item) => !deleteTarget.includes(item)))
       setDeleteTarget(null)
     } catch (error) {
@@ -211,7 +222,7 @@ export default function FolderPage() {
               query={query}
               onQueryChange={setQuery}
               placeholder={`Buscar em ${folder.title}`}
-              escapeEnabled={!upload && !deleteTarget}
+              escapeEnabled={!upload && !deleteTarget && !viewerId}
               triggerClassName="toolbar-icon-btn"
               iconSize={24}
             />
@@ -246,6 +257,7 @@ export default function FolderPage() {
                 onOpenMenu={setMenuLogoId}
                 onCloseMenu={closeMenu}
                 onAction={handleCardAction}
+                onOpen={setViewerId}
               />
             ))}
           </div>
@@ -256,6 +268,22 @@ export default function FolderPage() {
           </p>
         ) : null}
       </PageContainer>
+
+      {viewerId ? (
+        <LogoViewer
+          identity={identity}
+          logos={visibleLogos}
+          logoId={viewerId}
+          deleteOpen={Boolean(deleteTarget)}
+          shareTip={shareTip === 'viewer'}
+          onChangeLogo={setViewerId}
+          onClose={() => setViewerId(null)}
+          onDelete={(logo) => setDeleteTarget([logo.id])}
+          onDownload={(logo) => handleDownload([logo.id])}
+          onShare={() => showShareTip('viewer')}
+          onUpdate={(logoId, changes, rights) => updateLogo(identity.id, logoId, changes, rights)}
+        />
+      ) : null}
 
       {deleteTarget ? (
         <ConfirmDialog

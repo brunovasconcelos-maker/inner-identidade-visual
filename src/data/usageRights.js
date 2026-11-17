@@ -33,3 +33,19 @@ export function usageRightsSummary(options, selected) {
   const rest = checked.length - 1
   return `${checked[0]}, +${rest} ${rest === 1 ? 'uso' : 'usos'}`
 }
+
+// Adds a custom right (checked) to { usageRights, customRights }. A right that already
+// exists, ignoring case, is only checked.
+export function addCustomRight(state, name) {
+  const options = [...BUILTIN_RIGHTS, ...state.customRights]
+  const existing = options.find((option) => option.toLowerCase() === name.toLowerCase())
+  if (existing) {
+    if (state.usageRights.includes(existing)) return state
+    return { ...state, usageRights: toggleUsageRight(state.usageRights, existing) }
+  }
+  return {
+    ...state,
+    customRights: [...state.customRights, name],
+    usageRights: toggleUsageRight(state.usageRights, name),
+  }
+}

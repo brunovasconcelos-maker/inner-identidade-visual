@@ -3,7 +3,7 @@ import { ArrowsCounterClockwise, FilePlus, Trash } from '@phosphor-icons/react'
 import SidePanel from './SidePanel.jsx'
 import MonoThumb from './MonoThumb.jsx'
 import { newId } from '../../data/identities.jsx'
-import { openFilePicker, previewBgFor, validateImageFile } from '../../utils/files.js'
+import { pickImage } from '../../utils/files.js'
 
 const SLOTS = [
   { id: 'preto', name: 'Preto', description: 'Pronta pra fundos claros e impressões em preto.' },
@@ -14,19 +14,6 @@ const SLOTS = [
   },
 ]
 const SLOT_IDS = SLOTS.map((slot) => slot.id)
-
-// Picks and validates an image. Returns { file, previewBg } or null.
-async function pickImage(setError) {
-  const file = await openFilePicker()
-  if (!file) return null
-  const result = validateImageFile(file)
-  if (!result.ok) {
-    setError(result.error)
-    return null
-  }
-  setError(null)
-  return { file, previewBg: await previewBgFor(file) }
-}
 
 export default function MonoPanel({ initial, onSave, onCancel }) {
   const [versions, setVersions] = useState(initial)

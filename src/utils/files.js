@@ -101,3 +101,17 @@ export async function previewBgFor(file) {
     URL.revokeObjectURL(url)
   }
 }
+
+// Opens the file picker and validates the choice. Returns { file, previewBg } or null.
+// `onError` receives the short message of an invalid file (or null for a valid one).
+export async function pickImage(onError) {
+  const file = await openFilePicker()
+  if (!file) return null
+  const result = validateImageFile(file)
+  if (!result.ok) {
+    onError(result.error)
+    return null
+  }
+  onError(null)
+  return { file, previewBg: await previewBgFor(file) }
+}

@@ -137,6 +137,26 @@ export function IdentitiesProvider({ children }) {
     return next
   }, [])
 
+  // Updates the editable fields of a logo, plus the custom usage rights created while
+  // editing it. Rejects if the change could not be persisted.
+  const updateLogo = useCallback(async (identityId, logoId, changes, customRights = []) => {
+    const current = identitiesRef.current.find((item) => item.id === identityId)
+    if (!current) throw new Error('Identity not found')
+    const known = new Set(current.customUsageRights.map((right) => right.toLowerCase()))
+    const added = customRights.filter((right) => !known.has(right.toLowerCase()))
+    const next = {
+      ...current,
+      logos: current.logos.map((logo) => (logo.id === logoId ? { ...logo, ...changes } : logo)),
+      customUsageRights: [...current.customUsageRights, ...added],
+    }
+    await saveIdentity(next)
+    setState((s) => ({
+      ...s,
+      identities: s.identities.map((item) => (item.id === identityId ? next : item)),
+    }))
+    return next
+  }, [])
+
   // Deletes logos. Rejects if the change could not be persisted.
   const deleteLogos = useCallback(async (identityId, logoIds) => {
     const current = identitiesRef.current.find((item) => item.id === identityId)
@@ -157,9 +177,10 @@ export function IdentitiesProvider({ children }) {
       loading: state.loading,
       createIdentity,
       addLogo,
+      updateLogo,
       deleteLogos,
     }),
-    [state, createIdentity, addLogo, deleteLogos],
+    [state, createIdentity, addLogo, updateLogo, deleteLogos],
   )
 
   return <IdentitiesContext.Provider value={value}>{children}</IdentitiesContext.Provider>
