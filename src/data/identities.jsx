@@ -2,11 +2,38 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 
 const STORAGE_KEY = 'inner-identidade-visual:identities'
 
+// One array of items per folder of an identity.
+export const FOLDER_KEYS = [
+  'logos',
+  'icones',
+  'paleta',
+  'tipografia',
+  'elementos',
+  'bibliotecaDeIcones',
+  'fotografia',
+  'tomDeVoz',
+  'personalidade',
+]
+
+function emptyFolders() {
+  return Object.fromEntries(FOLDER_KEYS.map((key) => [key, []]))
+}
+
+// Adds the folder arrays that an older stored identity does not have yet.
+// Everything already stored is kept as it is.
+function migrate(identity) {
+  const next = { ...identity }
+  for (const key of FOLDER_KEYS) {
+    if (!Array.isArray(next[key])) next[key] = []
+  }
+  return next
+}
+
 function load() {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY)
     const parsed = raw ? JSON.parse(raw) : []
-    return Array.isArray(parsed) ? parsed : []
+    return Array.isArray(parsed) ? parsed.map(migrate) : []
   } catch {
     return []
   }
@@ -37,6 +64,7 @@ export function IdentitiesProvider({ children }) {
       createdAt: new Date().toISOString(),
       logo: null,
       cover: null,
+      ...emptyFolders(),
     }
     setIdentities((current) => [...current, identity])
     return identity

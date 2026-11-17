@@ -1,7 +1,9 @@
-// Visual only. `icon` is the Phosphor icon (Fill) shown in Figma.
-export default function FolderCard({ icon, tint, title, description }) {
+import { Link } from 'react-router-dom'
+
+// `icon` is the Phosphor icon (Fill) shown in Figma.
+export default function FolderCard({ icon, tint, title, description, to }) {
   return (
-    <div className="folder-card">
+    <Link to={to} className="folder-card">
       <div className="folder-card__icon" style={{ background: tint }}>
         {icon}
       </div>
@@ -9,6 +11,6 @@ export default function FolderCard({ icon, tint, title, description }) {
         <p className="folder-card__title">{title}</p>
         <p className="folder-card__description">{description}</p>
       </div>
-    </div>
+    </Link>
   )
 }

@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { MagnifyingGlass, Plus, X } from '@phosphor-icons/react'
+import { Plus } from '@phosphor-icons/react'
 import PageContainer from '../components/PageContainer.jsx'
 import EmptyState from '../components/EmptyState.jsx'
 import IdentityCard from '../components/IdentityCard.jsx'
 import NewIdentityModal from '../components/NewIdentityModal.jsx'
+import ExpandableSearch from '../components/ExpandableSearch.jsx'
 import { useIdentities } from '../data/identities.jsx'
 import { normalize } from '../utils/format.js'
 
@@ -14,7 +15,6 @@ export default function Identities() {
   const [modalOpen, setModalOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [query, setQuery] = useState('')
-  const searchInputRef = useRef(null)
 
   const closeModal = useCallback(() => setModalOpen(false), [])
 
@@ -24,22 +24,10 @@ export default function Identities() {
     navigate(`/id/${identity.id}`)
   }
 
-  function closeSearch() {
+  const closeSearch = useCallback(() => {
     setQuery('')
     setSearchOpen(false)
-  }
-
-  useEffect(() => {
-    if (!searchOpen || modalOpen) return undefined
-    function onKeyDown(event) {
-      if (event.key === 'Escape') {
-        setQuery('')
-        setSearchOpen(false)
-      }
-    }
-    document.addEventListener('keydown', onKeyDown)
-    return () => document.removeEventListener('keydown', onKeyDown)
-  }, [searchOpen, modalOpen])
+  }, [])
 
   const visible = useMemo(() => {
     const term = normalize(query.trim())
@@ -56,36 +44,15 @@ export default function Identities() {
       <div className="section-row">
         <h2 className="section-row__title">Minhas identidades visuais</h2>
         <div className="section-row__actions">
-          {searchOpen ? (
-            <div className="search-field">
-              <input
-                ref={searchInputRef}
-                className="search-field__input"
-                type="text"
-                value={query}
-                placeholder="Buscar identidade"
-                autoFocus
-                autoComplete="off"
-                onChange={(event) => setQuery(event.target.value)}
-              />
-              <button
-                type="button"
-                className="search-field__clear"
-                aria-label="Limpar busca"
-                onClick={closeSearch}
-              >
-                <X size={16} color="#5d5d5d" weight="regular" />
-              </button>
-            </div>
-          ) : null}
-          <button
-            type="button"
-            className="icon-btn"
-            aria-label="Buscar identidade"
-            onClick={() => setSearchOpen(true)}
-          >
-            <MagnifyingGlass size={20} color="#5d5d5d" weight="regular" />
-          </button>
+          <ExpandableSearch
+            open={searchOpen}
+            onOpen={() => setSearchOpen(true)}
+            onClose={closeSearch}
+            query={query}
+            onQueryChange={setQuery}
+            placeholder="Buscar identidade"
+            escapeEnabled={!modalOpen}
+          />
           <button
             type="button"
             className="btn btn--primary btn--with-icon"
