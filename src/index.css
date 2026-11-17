@@ -1,0 +1,16 @@
+/* Layout foundation only. Fonts, colors and design tokens come from Figma later. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 1440px; /* desktop only, design base width */
+}
+
+.page-container {
+  max-width: 1132px;
+  margin: 0 auto;
+}
