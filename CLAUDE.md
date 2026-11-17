@@ -5,6 +5,8 @@ Brand Identity module for the Inner AI platform. Users organize brand assets (Lo
 
 Stack: React + Vite + react-router-dom (HashRouter), deployed to GitHub Pages at base `/inner-identidade-visual/`.
 
+Data: identities and their files persist in IndexedDB (`src/storage/db.js`). localStorage is only read once to migrate older data.
+
 ## Permanent rules
 
 - **Figma is the single source of truth.** Match logos, colors, font sizes, weights, line heights, spacing, radii and shadows exactly. Use `get_design_context` for each screen and each state separately.

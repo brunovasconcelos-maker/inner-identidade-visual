@@ -1,22 +1,26 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
 import { Desktop, SlidersHorizontal } from '@phosphor-icons/react'
 import PageContainer from '../components/PageContainer.jsx'
 import Breadcrumb from '../components/Breadcrumb.jsx'
 import ExpandableSearch from '../components/ExpandableSearch.jsx'
 import AddCard from '../components/AddCard.jsx'
+import NewLogoModal from '../components/logo/NewLogoModal.jsx'
 import { useIdentities } from '../data/identities.jsx'
 import { findFolder } from '../data/folders.jsx'
 import { normalize } from '../utils/format.js'
+import { openFilePicker, readImageSize, validateImageFile } from '../utils/files.js'
 
 export default function FolderPage() {
   const { id, section } = useParams()
-  const { identities } = useIdentities()
+  const { identities, loading, addLogo } = useIdentities()
   const identity = identities.find((item) => item.id === id)
   const folder = findFolder(section)
 
   const [searchOpen, setSearchOpen] = useState(false)
   const [query, setQuery] = useState('')
+  const [upload, setUpload] = useState(null) // file chosen for the "Nova logo" modal
+  const [uploadError, setUploadError] = useState(null)
 
   const items = identity && folder ? identity[folder.key] : []
   // Items of this folder that match the search. Nothing renders them yet, but the
@@ -27,10 +31,32 @@ export default function FolderPage() {
     return items.filter((item) => normalize(item.name || '').includes(term))
   }, [items, query])
 
+  useEffect(() => {
+    if (!uploadError) return undefined
+    const timer = setTimeout(() => setUploadError(null), 5000)
+    return () => clearTimeout(timer)
+  }, [uploadError])
+
+  if (loading) return null
   if (!identity) return <Navigate to="/" replace />
   if (!folder) return <Navigate to={`/id/${id}`} replace />
 
   const total = items.length
+
+  // Opens the native file picker. A valid file opens the "Nova logo" modal; an
+  // invalid one shows a short message near the card and the modal stays closed.
+  async function handleUploadLogo() {
+    setUploadError(null)
+    const file = await openFilePicker()
+    if (!file) return
+    const result = validateImageFile(file)
+    if (!result.ok) {
+      setUploadError(result.error)
+      return
+    }
+    const size = await readImageSize(file)
+    setUpload({ file, format: result.format, ...size })
+  }
 
   function closeSearch() {
     setQuery('')
@@ -65,6 +91,7 @@ export default function FolderPage() {
               query={query}
               onQueryChange={setQuery}
               placeholder={`Buscar em ${folder.title}`}
+              escapeEnabled={!upload}
               triggerClassName="toolbar-icon-btn"
               iconSize={24}
             />
@@ -84,11 +111,26 @@ export default function FolderPage() {
                 icon={card.icon}
                 label={card.label}
                 disabled={card.isEnabled ? !card.isEnabled(identity) : false}
+                onClick={card.action === 'upload-logo' ? handleUploadLogo : undefined}
               />
             ))}
           </div>
         ) : null}
+        {uploadError ? (
+          <p className="add-error" role="alert">
+            {uploadError}
+          </p>
+        ) : null}
       </PageContainer>
+
+      {upload ? (
+        <NewLogoModal
+          identity={identity}
+          upload={upload}
+          onClose={() => setUpload(null)}
+          onSave={(logo, createdRights) => addLogo(identity.id, logo, createdRights)}
+        />
+      ) : null}
     </div>
   )
 }

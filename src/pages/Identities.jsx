@@ -11,7 +11,7 @@ import { normalize } from '../utils/format.js'
 
 export default function Identities() {
   const navigate = useNavigate()
-  const { identities, createIdentity } = useIdentities()
+  const { identities, loading, createIdentity } = useIdentities()
   const [modalOpen, setModalOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [query, setQuery] = useState('')
@@ -36,6 +36,8 @@ export default function Identities() {
   }, [identities, query])
 
   const hasIdentities = identities.length > 0
+
+  if (loading) return null
 
   return (
     <PageContainer>

@@ -16,9 +16,10 @@ import { useIdentities } from '../data/identities.jsx'
 
 export default function IdentityDetail() {
   const { id } = useParams()
-  const { identities } = useIdentities()
+  const { identities, loading } = useIdentities()
   const identity = identities.find((item) => item.id === id)
 
+  if (loading) return null
   if (!identity) return <Navigate to="/" replace />
 
   return (

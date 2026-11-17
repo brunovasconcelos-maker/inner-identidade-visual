@@ -1,13 +1,15 @@
 import { FilePlus, Package, Palette, Sparkle, TextAa } from '@phosphor-icons/react'
+import { firstFreeLogoType } from './logoTypes.js'
 
 // Folder pages of an identity. `key` is the array on the identity, `slug` the route.
 // A card with `requires` is disabled until that rule is true for the identity.
 const ICON = { size: 24, color: '#5d5d5d', weight: 'regular' }
 
-const upload = (label) => ({
+const upload = (label, extra = {}) => ({
   id: 'upload',
   icon: <FilePlus {...ICON} />,
   label,
+  ...extra,
 })
 
 export const FOLDERS = [
@@ -15,7 +17,13 @@ export const FOLDERS = [
     slug: 'logo',
     key: 'logos',
     title: 'Logo',
-    cards: [upload('Adicione uma logo que você já tem')],
+    cards: [
+      upload('Adicione uma logo que você já tem', {
+        action: 'upload-logo',
+        // Disabled once all five logo types exist in the identity.
+        isEnabled: (identity) => firstFreeLogoType(identity.logos) !== null,
+      }),
+    ],
   },
   {
     slug: 'icone',
