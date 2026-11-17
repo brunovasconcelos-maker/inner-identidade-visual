@@ -279,7 +279,6 @@ export default function FolderPage() {
           onChangeLogo={setViewerId}
           onClose={() => setViewerId(null)}
           onDelete={(logo) => setDeleteTarget([logo.id])}
-          onDownload={(logo) => handleDownload([logo.id])}
           onShare={() => showShareTip('viewer')}
           onUpdate={(logoId, changes, rights) => updateLogo(identity.id, logoId, changes, rights)}
         />

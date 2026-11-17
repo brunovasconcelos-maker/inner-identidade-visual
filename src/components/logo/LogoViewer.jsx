@@ -4,6 +4,7 @@ import ConfirmDialog from '../ConfirmDialog.jsx'
 import LogoDetailsPanel from './LogoDetailsPanel.jsx'
 import { findLogoType } from '../../data/logoTypes.js'
 import { useObjectUrl } from '../../hooks/useObjectUrl.js'
+import { saveBlob } from '../../utils/download.js'
 
 function initialDraft(logo, identity) {
   return {
@@ -33,6 +34,23 @@ function isDirty(draft, logo) {
   )
 }
 
+// Thumbnail of the featured-image row: the original logo or one monochrome version.
+function VersionTab({ file, bg, label, active, onSelect }) {
+  const url = useObjectUrl(file)
+  return (
+    <button
+      type="button"
+      className={`logo-thumb viewer__thumb${active ? ' viewer__thumb--active' : ''}`}
+      style={{ background: bg }}
+      aria-label={label}
+      aria-pressed={active}
+      onClick={onSelect}
+    >
+      {url ? <img className="logo-thumb__img" src={url} alt="" /> : null}
+    </button>
+  )
+}
+
 function Neighbor({ logo, side, onOpen }) {
   const url = useObjectUrl(logo.file)
   const type = findLogoType(logo.type)
@@ -59,7 +77,6 @@ export default function LogoViewer({
   onChangeLogo,
   onClose,
   onDelete,
-  onDownload,
   onShare,
   onUpdate,
 }) {
@@ -67,7 +84,14 @@ export default function LogoViewer({
   const logo = logos[index]
   const prev = index > 0 ? logos[index - 1] : null
   const next = index >= 0 && index < logos.length - 1 ? logos[index + 1] : null
-  const url = useObjectUrl(logo ? logo.file : null)
+  // Featured version: the original (null) or the id of one saved monochrome version.
+  // It belongs to one logo, so moving to another logo shows its original again.
+  const [featuredState, setFeaturedState] = useState({ logoId: null, versionId: null })
+  const featuredId = logo && featuredState.logoId === logo.id ? featuredState.versionId : null
+  const featuredVersion = logo ? logo.monoVersions.find((version) => version.id === featuredId) || null : null
+  const featuredFile = logo ? (featuredVersion ? featuredVersion.file : logo.file) : null
+  const featuredName = logo ? (featuredVersion ? featuredVersion.fileName : logo.fileName) : ''
+  const url = useObjectUrl(featuredFile)
 
   const [draftState, setDraftState] = useState(null) // { logoId, values }
   const [pending, setPending] = useState(null) // action waiting for the discard dialog
@@ -90,6 +114,7 @@ export default function LogoViewer({
   }
 
   function go(action) {
+    setFeaturedState({ logoId: null, versionId: null })
     setDraftState(null)
     setSaveError(null)
     setPending(null)
@@ -192,10 +217,32 @@ export default function LogoViewer({
           </button>
           {shareTip ? <span className="tooltip">Em breve</span> : null}
         </span>
-        <button type="button" className="viewer__round" aria-label="Baixar" onClick={() => onDownload(logo)}>
+        <button type="button" className="viewer__round" aria-label="Baixar" onClick={() => saveBlob(featuredFile, featuredName)}>
           <DownloadSimple size={20} color="#5d5d5d" weight="regular" />
         </button>
       </div>
+
+      {logo.monoVersions.length > 0 ? (
+        <div className="viewer__thumbs">
+          <VersionTab
+            file={logo.file}
+            bg="#f4f5f5"
+            label="Original"
+            active={!featuredVersion}
+            onSelect={() => setFeaturedState({ logoId: logo.id, versionId: null })}
+          />
+          {logo.monoVersions.map((version) => (
+            <VersionTab
+              key={version.id}
+              file={version.file}
+              bg={version.previewBg}
+              label={version.name}
+              active={featuredVersion === version}
+              onSelect={() => setFeaturedState({ logoId: logo.id, versionId: version.id })}
+            />
+          ))}
+        </div>
+      ) : null}
 
       {prev ? (
         <>

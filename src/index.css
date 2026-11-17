@@ -2162,3 +2162,35 @@ button {
   height: 36px;
   object-fit: contain;
 }
+
+/* Row of the original and monochrome versions below the featured image. Thumbnails reuse
+   the logo card ones (52 x 52, radius 8, gap 9.667). The active one takes the selected
+   card border: 1px black and a 0 0 8 shadow at 10%. The row sits 16px below the card,
+   under the neighbors (which end at the card bottom), so it never overlaps them. */
+.viewer__thumbs {
+  position: absolute;
+  left: calc(var(--viewer-left) - 8px);
+  top: calc(118px + 507.376px + 16px - 8px);
+  display: flex;
+  justify-content: safe center;
+  gap: 9.667px;
+  box-sizing: border-box;
+  width: 572px;
+  padding: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.viewer__thumbs::-webkit-scrollbar {
+  display: none;
+}
+
+.viewer__thumb {
+  padding: 1.833px 0.917px;
+  border: 0;
+  cursor: pointer;
+}
+
+.viewer__thumb--active {
+  box-shadow: inset 0 0 0 1px #000000, 0 0 8px rgba(0, 0, 0, 0.1);
+}
