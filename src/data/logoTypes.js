@@ -45,3 +45,9 @@ export function firstFreeLogoType(logos) {
   const used = usedLogoTypes(logos)
   return LOGO_TYPES.find((type) => !used.has(type.id)) || null
 }
+
+// Logos in the order of the types: principal, secundária, vertical, horizontal, com tagline.
+export function sortLogos(logos) {
+  const order = (logo) => LOGO_TYPES.findIndex((type) => type.id === logo.type)
+  return [...logos].sort((a, b) => order(a) - order(b))
+}

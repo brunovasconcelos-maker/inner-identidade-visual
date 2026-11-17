@@ -137,9 +137,29 @@ export function IdentitiesProvider({ children }) {
     return next
   }, [])
 
+  // Deletes logos. Rejects if the change could not be persisted.
+  const deleteLogos = useCallback(async (identityId, logoIds) => {
+    const current = identitiesRef.current.find((item) => item.id === identityId)
+    if (!current) throw new Error('Identity not found')
+    const remove = new Set(logoIds)
+    const next = { ...current, logos: current.logos.filter((logo) => !remove.has(logo.id)) }
+    await saveIdentity(next)
+    setState((s) => ({
+      ...s,
+      identities: s.identities.map((item) => (item.id === identityId ? next : item)),
+    }))
+    return next
+  }, [])
+
   const value = useMemo(
-    () => ({ identities: state.identities, loading: state.loading, createIdentity, addLogo }),
-    [state, createIdentity, addLogo],
+    () => ({
+      identities: state.identities,
+      loading: state.loading,
+      createIdentity,
+      addLogo,
+      deleteLogos,
+    }),
+    [state, createIdentity, addLogo, deleteLogos],
   )
 
   return <IdentitiesContext.Provider value={value}>{children}</IdentitiesContext.Provider>
