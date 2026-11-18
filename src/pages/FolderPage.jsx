@@ -12,16 +12,16 @@ import NewLogoModal from '../components/logo/NewLogoModal.jsx'
 import SelectionBar from '../components/logo/SelectionBar.jsx'
 import { useIdentities } from '../data/identities.jsx'
 import { findFolder } from '../data/folders.jsx'
-import { findLogoType, sortLogos } from '../data/logoTypes.js'
+import { kindForSection } from '../data/assetKinds.js'
+import { sortLogos } from '../data/logoTypes.js'
 import { normalize } from '../utils/format.js'
 import { openFilePicker, readImageSize, validateImageFile } from '../utils/files.js'
 import { downloadLogos } from '../utils/download.js'
 
 // The search filters logo cards by type name and tags (case and accent insensitive).
-function logoMatches(logo, term) {
-  const type = findLogoType(logo.type)
+function logoMatches(logo, label, term) {
   return (
-    normalize(type ? type.label : '').includes(term) ||
+    normalize(label).includes(term) ||
     logo.tags.some((tag) => normalize(tag).includes(term))
   )
 }
@@ -45,17 +45,18 @@ export default function FolderPage() {
   const [viewerId, setViewerId] = useState(null) // logo open in the viewer
   const shareTimer = useRef(null)
 
-  const isLogoFolder = section === 'logo'
+  // Logo and Ícone share the whole flow (cards, upload modal, viewer, actions).
+  const kind = kindForSection(section)
   const items = identity && folder ? identity[folder.key] : []
-  const logos = useMemo(
-    () => (isLogoFolder && identity ? sortLogos(identity.logos) : []),
-    [isLogoFolder, identity],
-  )
+  const logos = useMemo(() => {
+    if (!kind || !identity) return []
+    return kind.hasType ? sortLogos(identity[kind.key]) : identity[kind.key]
+  }, [kind, identity])
   const visibleLogos = useMemo(() => {
     const term = normalize(query.trim())
     if (!term) return logos
-    return logos.filter((logo) => logoMatches(logo, term))
-  }, [logos, query])
+    return logos.filter((logo) => logoMatches(logo, kind.label(logo), term))
+  }, [logos, kind, query])
   // Items of this folder that match the search. Nothing renders them yet, but the
   // filter is in place for when items exist. The add cards are never filtered.
   const visibleItems = useMemo(() => {
@@ -110,7 +111,7 @@ export default function FolderPage() {
 
   // Opens the native file picker. A valid file opens the "Nova logo" modal; an
   // invalid one shows a short message near the card and the modal stays closed.
-  async function handleUploadLogo() {
+  async function handleUpload() {
     setUploadError(null)
     const file = await openFilePicker()
     if (!file) return
@@ -140,7 +141,7 @@ export default function FolderPage() {
     const chosen = logos.filter((logo) => ids.includes(logo.id))
     if (chosen.length === 0) return
     try {
-      await downloadLogos(identity.name, chosen)
+      await downloadLogos(identity.name, chosen, kind)
     } catch (error) {
       console.error('Could not download', error)
     }
@@ -166,7 +167,7 @@ export default function FolderPage() {
         const before = visibleLogos.slice(0, at).reverse().find((logo) => rest.includes(logo))
         return following ? following.id : before ? before.id : null
       })()
-      await deleteLogos(identity.id, deleteTarget)
+      await deleteLogos(identity.id, deleteTarget, kind.key)
       if (nextViewer !== undefined) setViewerId(nextViewer)
       setSelectedIds((current) => current.filter((item) => !deleteTarget.includes(item)))
       setDeleteTarget(null)
@@ -242,13 +243,16 @@ export default function FolderPage() {
                 icon={card.icon}
                 label={card.label}
                 disabled={card.isEnabled ? !card.isEnabled(identity) : false}
-                onClick={card.action === 'upload-logo' ? handleUploadLogo : undefined}
+                disabledStyle={card.disabledStyle}
+                onClick={card.action === 'upload-asset' ? handleUpload : undefined}
               />
             ))}
             {visibleLogos.map((logo) => (
               <LogoCard
                 key={logo.id}
                 logo={logo}
+                label={kind.label(logo)}
+                icon={!kind.hasType}
                 selected={selectedIds.includes(logo.id)}
                 selecting={selectedIds.length > 0}
                 menuOpen={menuLogoId === logo.id}
@@ -274,19 +278,22 @@ export default function FolderPage() {
           identity={identity}
           logos={visibleLogos}
           logoId={viewerId}
+          kind={kind}
           deleteOpen={Boolean(deleteTarget)}
           shareTip={shareTip === 'viewer'}
           onChangeLogo={setViewerId}
           onClose={() => setViewerId(null)}
           onDelete={(logo) => setDeleteTarget([logo.id])}
           onShare={() => showShareTip('viewer')}
-          onUpdate={(logoId, changes, rights) => updateLogo(identity.id, logoId, changes, rights)}
+          onUpdate={(logoId, changes, rights) =>
+            updateLogo(identity.id, logoId, changes, rights, kind.key)
+          }
         />
       ) : null}
 
       {deleteTarget ? (
         <ConfirmDialog
-          title={deleteTarget.length === 1 ? 'Excluir logo?' : `Excluir ${deleteTarget.length} logos?`}
+          title={kind.deleteTitle(deleteTarget.length)}
           text="Essa ação não pode ser desfeita."
           cancelLabel="Cancelar"
           confirmLabel="Excluir"
@@ -304,8 +311,9 @@ export default function FolderPage() {
         <NewLogoModal
           identity={identity}
           upload={upload}
+          kind={kind}
           onClose={() => setUpload(null)}
-          onSave={(logo, createdRights) => addLogo(identity.id, logo, createdRights)}
+          onSave={(logo, createdRights) => addLogo(identity.id, logo, createdRights, kind.key)}
         />
       ) : null}
     </div>

@@ -1,5 +1,5 @@
 import { zipSync } from 'fflate'
-import { findLogoType } from '../data/logoTypes.js'
+import { ASSET_KINDS } from '../data/assetKinds.js'
 
 // Starts a browser download of a Blob.
 export function saveBlob(blob, fileName) {
@@ -32,14 +32,14 @@ async function bytesOf(blob) {
 // with every main file and its monochrome versions, one folder per logo type:
 //   principal/logo.svg
 //   principal/monocromaticas/Preto.svg
-export async function downloadLogos(identityName, logos) {
+export async function downloadLogos(identityName, logos, kind = ASSET_KINDS.logo) {
   if (logos.length === 1 && logos[0].monoVersions.length === 0) {
     saveBlob(logos[0].file, logos[0].fileName)
     return
   }
   const files = {}
   for (const logo of logos) {
-    const folder = findLogoType(logo.type)?.id || logo.id
+    const folder = kind.zipFolder(logo)
     files[`${folder}/${safeName(logo.fileName)}`] = await bytesOf(logo.file)
     for (const version of logo.monoVersions) {
       const base = `${folder}/monocromaticas/${safeName(version.name)}`
@@ -50,5 +50,5 @@ export async function downloadLogos(identityName, logos) {
     }
   }
   const zipped = zipSync(files)
-  saveBlob(new Blob([zipped], { type: 'application/zip' }), `${safeName(identityName)}-logos.zip`)
+  saveBlob(new Blob([zipped], { type: 'application/zip' }), `${safeName(identityName)}-${kind.zipSuffix}.zip`)
 }

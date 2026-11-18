@@ -9,7 +9,6 @@ import {
   Trash,
 } from '@phosphor-icons/react'
 import LogoThumb from './LogoThumb.jsx'
-import { findLogoType } from '../../data/logoTypes.js'
 import { useObjectUrl } from '../../hooks/useObjectUrl.js'
 import { formatDate } from '../../utils/format.js'
 
@@ -28,6 +27,8 @@ function thumbSlots(versions) {
 
 export default function LogoCard({
   logo,
+  label,
+  icon = false,
   selected,
   selecting,
   menuOpen,
@@ -38,7 +39,6 @@ export default function LogoCard({
   onAction,
   onOpen,
 }) {
-  const type = findLogoType(logo.type)
   const url = useObjectUrl(logo.file)
   const kebabRef = useRef(null)
   const { shown, rest } = thumbSlots(logo.monoVersions)
@@ -79,7 +79,7 @@ export default function LogoCard({
           className="logo-card__preview"
           role="button"
           tabIndex={0}
-          aria-label={`Abrir ${type.label}`}
+          aria-label={`Abrir ${label}`}
           onClick={() => onOpen(logo.id)}
           onKeyDown={(event) => {
             if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
@@ -88,13 +88,13 @@ export default function LogoCard({
             }
           }}
         >
-          {url ? <img className="logo-card__img" src={url} alt={type.label} /> : null}
+          {url ? <img className="logo-card__img" src={url} alt={label} /> : null}
           <button
             type="button"
             className="logo-card__check"
             role="checkbox"
             aria-checked={selected}
-            aria-label={`Selecionar ${type.label}`}
+            aria-label={`Selecionar ${label}`}
             onClick={(event) => {
               event.stopPropagation()
               onToggleSelect(logo.id)
@@ -112,7 +112,7 @@ export default function LogoCard({
               className="logo-card__kebab-btn"
               aria-haspopup="menu"
               aria-expanded={menuOpen}
-              aria-label={`Mais opções de ${type.label}`}
+              aria-label={`Mais opções de ${label}`}
               onClick={() => (menuOpen ? onCloseMenu() : onOpenMenu(logo.id))}
             >
               <DotsThreeVertical size={24} color="#5d5d5d" weight="bold" />
@@ -140,7 +140,7 @@ export default function LogoCard({
         {logo.monoVersions.length > 0 ? (
           <div className="logo-card__thumbs">
             {shown.map((version) => (
-              <LogoThumb key={version.id} file={version.file} bg={version.previewBg} />
+              <LogoThumb key={version.id} file={version.file} bg={version.previewBg} icon={icon} />
             ))}
             {rest > 0 ? <span className="logo-thumb logo-thumb--more">+{rest}</span> : null}
           </div>
@@ -148,7 +148,7 @@ export default function LogoCard({
       </div>
 
       <div className="logo-card__texts">
-        <p className="logo-card__name">{type.label}</p>
+        <p className="logo-card__name">{label}</p>
         <p className="logo-card__date">{formatDate(logo.createdAt)}</p>
       </div>
     </div>

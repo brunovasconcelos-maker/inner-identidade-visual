@@ -119,14 +119,14 @@ export function IdentitiesProvider({ children }) {
 
   // Saves a logo and the custom usage rights created while adding it. Rejects if
   // the data could not be persisted.
-  const addLogo = useCallback(async (identityId, logo, customRights = []) => {
+  const addLogo = useCallback(async (identityId, logo, customRights = [], key = 'logos') => {
     const current = identitiesRef.current.find((item) => item.id === identityId)
     if (!current) throw new Error('Identity not found')
     const known = new Set(current.customUsageRights.map((right) => right.toLowerCase()))
     const added = customRights.filter((right) => !known.has(right.toLowerCase()))
     const next = {
       ...current,
-      logos: [...current.logos, logo],
+      [key]: [...current[key], logo],
       customUsageRights: [...current.customUsageRights, ...added],
     }
     await saveIdentity(next)
@@ -139,14 +139,14 @@ export function IdentitiesProvider({ children }) {
 
   // Updates the editable fields of a logo, plus the custom usage rights created while
   // editing it. Rejects if the change could not be persisted.
-  const updateLogo = useCallback(async (identityId, logoId, changes, customRights = []) => {
+  const updateLogo = useCallback(async (identityId, logoId, changes, customRights = [], key = 'logos') => {
     const current = identitiesRef.current.find((item) => item.id === identityId)
     if (!current) throw new Error('Identity not found')
     const known = new Set(current.customUsageRights.map((right) => right.toLowerCase()))
     const added = customRights.filter((right) => !known.has(right.toLowerCase()))
     const next = {
       ...current,
-      logos: current.logos.map((logo) => (logo.id === logoId ? { ...logo, ...changes } : logo)),
+      [key]: current[key].map((logo) => (logo.id === logoId ? { ...logo, ...changes } : logo)),
       customUsageRights: [...current.customUsageRights, ...added],
     }
     await saveIdentity(next)
@@ -158,11 +158,11 @@ export function IdentitiesProvider({ children }) {
   }, [])
 
   // Deletes logos. Rejects if the change could not be persisted.
-  const deleteLogos = useCallback(async (identityId, logoIds) => {
+  const deleteLogos = useCallback(async (identityId, logoIds, key = 'logos') => {
     const current = identitiesRef.current.find((item) => item.id === identityId)
     if (!current) throw new Error('Identity not found')
     const remove = new Set(logoIds)
-    const next = { ...current, logos: current.logos.filter((logo) => !remove.has(logo.id)) }
+    const next = { ...current, [key]: current[key].filter((logo) => !remove.has(logo.id)) }
     await saveIdentity(next)
     setState((s) => ({
       ...s,

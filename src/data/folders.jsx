@@ -19,7 +19,8 @@ export const FOLDERS = [
     title: 'Logo',
     cards: [
       upload('Adicione uma logo que você já tem', {
-        action: 'upload-logo',
+        action: 'upload-asset',
+        disabledStyle: 'filled',
         // Disabled once all five logo types exist in the identity.
         isEnabled: (identity) => firstFreeLogoType(identity.logos) !== null,
       }),
@@ -29,7 +30,14 @@ export const FOLDERS = [
     slug: 'icone',
     key: 'icones',
     title: 'Ícone',
-    cards: [upload('Adicione um ícone que você já tem')],
+    cards: [
+      upload('Adicione um ícone que você já tem', {
+        action: 'upload-asset',
+        disabledStyle: 'filled',
+        // An identity has a single icon: the card is disabled while it exists.
+        isEnabled: (identity) => identity.icones.length === 0,
+      }),
+    ],
   },
   {
     slug: 'paleta-de-cores',

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { CaretLeft, CaretRight, DownloadSimple, Share, Trash, X } from '@phosphor-icons/react'
 import ConfirmDialog from '../ConfirmDialog.jsx'
 import LogoDetailsPanel from './LogoDetailsPanel.jsx'
-import { findLogoType } from '../../data/logoTypes.js'
+import { ASSET_KINDS } from '../../data/assetKinds.js'
 import { useObjectUrl } from '../../hooks/useObjectUrl.js'
 import { saveBlob } from '../../utils/download.js'
 
@@ -35,7 +35,7 @@ function isDirty(draft, logo) {
 }
 
 // Thumbnail of the featured-image row: the original logo or one monochrome version.
-function VersionTab({ file, bg, label, active, onSelect }) {
+function VersionTab({ file, bg, label, active, icon, onSelect }) {
   const url = useObjectUrl(file)
   return (
     <button
@@ -46,19 +46,18 @@ function VersionTab({ file, bg, label, active, onSelect }) {
       aria-pressed={active}
       onClick={onSelect}
     >
-      {url ? <img className="logo-thumb__img" src={url} alt="" /> : null}
+      {url ? <img className={`logo-thumb__img${icon ? ' logo-thumb__img--icon' : ''}`} src={url} alt="" /> : null}
     </button>
   )
 }
 
-function Neighbor({ logo, side, onOpen }) {
+function Neighbor({ logo, label, side, onOpen }) {
   const url = useObjectUrl(logo.file)
-  const type = findLogoType(logo.type)
   return (
     <button
       type="button"
       className={`viewer__neighbor viewer__neighbor--${side}`}
-      aria-label={type.label}
+      aria-label={label}
       onClick={onOpen}
     >
       {url ? <img className="viewer__neighbor-img" src={url} alt="" /> : null}
@@ -72,6 +71,7 @@ export default function LogoViewer({
   identity,
   logos,
   logoId,
+  kind = ASSET_KINDS.logo,
   deleteOpen,
   shareTip,
   onChangeLogo,
@@ -182,14 +182,14 @@ export default function LogoViewer({
   }, [])
 
   if (!logo) return null
-  const type = findLogoType(logo.type)
+  const label = kind.label(logo)
 
   return (
     <div
       className="viewer"
       role="dialog"
       aria-modal="true"
-      aria-label={`Logo ${type.label}`}
+      aria-label={kind.hasType ? `Logo ${label}` : label}
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) request({ type: 'close' })
       }}
@@ -204,7 +204,7 @@ export default function LogoViewer({
       </button>
 
       <div className="viewer__card">
-        {url ? <img className="viewer__img" src={url} alt={type.label} /> : null}
+        {url ? <img className="viewer__img" src={url} alt={label} /> : null}
       </div>
 
       <div className="viewer__actions">
@@ -228,6 +228,7 @@ export default function LogoViewer({
             file={logo.file}
             bg="#f4f5f5"
             label="Original"
+            icon={!kind.hasType}
             active={!featuredVersion}
             onSelect={() => setFeaturedState({ logoId: logo.id, versionId: null })}
           />
@@ -237,6 +238,7 @@ export default function LogoViewer({
               file={version.file}
               bg={version.previewBg}
               label={version.name}
+              icon={!kind.hasType}
               active={featuredVersion === version}
               onSelect={() => setFeaturedState({ logoId: logo.id, versionId: version.id })}
             />
@@ -254,7 +256,7 @@ export default function LogoViewer({
           >
             <CaretLeft size={24} color="#5d5d5d" weight="regular" />
           </button>
-          <Neighbor logo={prev} side="prev" onOpen={() => request({ type: 'nav', id: prev.id })} />
+          <Neighbor logo={prev} label={kind.label(prev)} side="prev" onOpen={() => request({ type: 'nav', id: prev.id })} />
         </>
       ) : null}
       {next ? (
@@ -267,7 +269,7 @@ export default function LogoViewer({
           >
             <CaretRight size={24} color="#5d5d5d" weight="regular" />
           </button>
-          <Neighbor logo={next} side="next" onOpen={() => request({ type: 'nav', id: next.id })} />
+          <Neighbor logo={next} label={kind.label(next)} side="next" onOpen={() => request({ type: 'nav', id: next.id })} />
         </>
       ) : null}
 

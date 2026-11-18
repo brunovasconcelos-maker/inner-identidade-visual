@@ -25,7 +25,7 @@ export default function LogoDetailsPanel({
   onSave,
   onCancel,
 }) {
-  const type = findLogoType(logo.type)
+  const type = logo.type ? findLogoType(logo.type) : null // icons have no type
   const [pendingColor, setPendingColor] = useState(null) // new color waiting for its name
   const [colorError, setColorError] = useState(null)
   const options = [...BUILTIN_RIGHTS, ...draft.customRights]
@@ -67,10 +67,12 @@ export default function LogoDetailsPanel({
   return (
     <aside className="viewer-panel" aria-label="Detalhes da logo">
       <div className="viewer-panel__content">
-        <section className="vp-section">
-          <p className="panel-field__label">Tipo de logo</p>
-          <span className="info-chip">{type.label}</span>
-        </section>
+        {type ? (
+          <section className="vp-section">
+            <p className="panel-field__label">Tipo de logo</p>
+            <span className="info-chip">{type.label}</span>
+          </section>
+        ) : null}
 
         <div className="vp-row">
           <section className="vp-section vp-section--format">

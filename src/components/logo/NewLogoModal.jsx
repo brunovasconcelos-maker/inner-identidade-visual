@@ -7,17 +7,17 @@ import MonoSummary from './MonoSummary.jsx'
 import TypePanel from './TypePanel.jsx'
 import { newId } from '../../data/identities.jsx'
 import { findLogoType, firstFreeLogoType, usedLogoTypes } from '../../data/logoTypes.js'
+import { ASSET_KINDS } from '../../data/assetKinds.js'
 import { defaultUsageRights } from '../../data/usageRights.js'
 import { useObjectUrl } from '../../hooks/useObjectUrl.js'
 
-function initialDraft(identity, format) {
-  const type = firstFreeLogoType(identity.logos)
+function initialDraft(identity, format, kind) {
+  const type = kind.hasType ? firstFreeLogoType(identity.logos) : null
   return {
-    type: type.id,
+    type: type ? type.id : null,
     description: '',
     useCases: '',
-    // Pre-filled with "Logo", the file format and the short type name.
-    tags: ['Logo', format, type.short],
+    tags: kind.autoTags(format, type),
     usageRights: defaultUsageRights(identity.customUsageRights),
     customRights: identity.customUsageRights,
     monoVersions: [],
@@ -39,9 +39,9 @@ function snapshot(draft) {
   ])
 }
 
-export default function NewLogoModal({ identity, upload, onClose, onSave }) {
+export default function NewLogoModal({ identity, upload, kind = ASSET_KINDS.logo, onClose, onSave }) {
   const { file, format, width, height } = upload
-  const [draft, setDraft] = useState(() => initialDraft(identity, format))
+  const [draft, setDraft] = useState(() => initialDraft(identity, format, kind))
   const [panel, setPanel] = useState(null) // 'type' | 'advanced' | 'mono' | null
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -51,7 +51,7 @@ export default function NewLogoModal({ identity, upload, onClose, onSave }) {
 
   const previewUrl = useObjectUrl(file)
   const usedTypes = useMemo(() => usedLogoTypes(identity.logos), [identity.logos])
-  const type = findLogoType(draft.type)
+  const type = kind.hasType ? findLogoType(draft.type) : null
   const dirty = snapshot(draft) !== initialSnapshot.current
 
   function requestClose() {
@@ -104,7 +104,7 @@ export default function NewLogoModal({ identity, upload, onClose, onSave }) {
     setSaveError(null)
     const logo = {
       id: newId(),
-      type: draft.type,
+      ...(kind.hasType ? { type: draft.type } : {}),
       file,
       fileName: file.name,
       format,
@@ -147,7 +147,7 @@ export default function NewLogoModal({ identity, upload, onClose, onSave }) {
         >
           <div className="modal__header">
             <h2 id="new-logo-title" className="modal__title">
-              Nova logo
+              {kind.modalTitle}
             </h2>
             <button type="button" className="modal__close" aria-label="Fechar" onClick={requestClose}>
               <X size={24} color="#5d5d5d" weight="regular" />
@@ -162,15 +162,17 @@ export default function NewLogoModal({ identity, upload, onClose, onSave }) {
             </div>
 
             <div className="logo-rows">
-              <button
-                type="button"
-                className="logo-row logo-row--divider"
-                onClick={() => setPanel('type')}
-              >
-                <span className="logo-row__label">Tipo de logo</span>
-                <span className="logo-row__value">{type.label}</span>
-                <CaretRight size={20} color="#5d5d5d" weight="regular" />
-              </button>
+              {kind.hasType ? (
+                <button
+                  type="button"
+                  className="logo-row logo-row--divider"
+                  onClick={() => setPanel('type')}
+                >
+                  <span className="logo-row__label">Tipo de logo</span>
+                  <span className="logo-row__value">{type.label}</span>
+                  <CaretRight size={20} color="#5d5d5d" weight="regular" />
+                </button>
+              ) : null}
               <button
                 type="button"
                 className="logo-row logo-row--end"
@@ -224,7 +226,7 @@ export default function NewLogoModal({ identity, upload, onClose, onSave }) {
         </div>
       </div>
 
-      {panel === 'type' ? (
+      {kind.hasType && panel === 'type' ? (
         <TypePanel
           currentType={draft.type}
           usedTypes={usedTypes}
@@ -245,7 +247,7 @@ export default function NewLogoModal({ identity, upload, onClose, onSave }) {
       ) : null}
 
       {confirmOpen ? (
-        <ConfirmDiscard onCancel={() => setConfirmOpen(false)} onDiscard={onClose} />
+        <ConfirmDiscard title={kind.discardTitle} onCancel={() => setConfirmOpen(false)} onDiscard={onClose} />
       ) : null}
     </>
   )
