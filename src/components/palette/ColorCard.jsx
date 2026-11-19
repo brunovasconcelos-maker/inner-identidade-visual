@@ -27,6 +27,7 @@ export default function ColorCard({
   onOpenMenu,
   onCloseMenu,
   onAction,
+  onOpen,
 }) {
   const kebabRef = useRef(null)
   const others = sortTones(color.tones).filter((tone) => !tone.isMain)
@@ -67,8 +68,20 @@ export default function ColorCard({
   return (
     <div className={classes}>
       <div className="logo-card__top">
-        {/* Clicking the swatch does nothing yet: the color screen comes later. */}
-        <div className="logo-card__preview" style={{ background: color.hex }}>
+        <div
+          className="logo-card__preview"
+          style={{ background: color.hex }}
+          role="button"
+          tabIndex={0}
+          aria-label={`Abrir ${color.name}`}
+          onClick={() => onOpen(color.id)}
+          onKeyDown={(event) => {
+            if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
+              event.preventDefault()
+              onOpen(color.id)
+            }
+          }}
+        >
           <span className="color-card__hex" style={{ color: textColor }}>
             {color.hex}
           </span>

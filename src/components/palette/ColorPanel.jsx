@@ -61,7 +61,7 @@ function HexInput({ hex, label, onCommit, readOnly = false, placeholder }) {
   )
 }
 
-function ToneRow({ tone, onChange, onRemove }) {
+export function ToneRow({ tone, onChange, onRemove }) {
   return (
     <div className="pal-tone">
       <p className="pal-tone__step">

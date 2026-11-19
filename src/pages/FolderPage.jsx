@@ -9,6 +9,7 @@ import ConfirmDialog from '../components/ConfirmDialog.jsx'
 import LogoViewer from '../components/logo/LogoViewer.jsx'
 import LogoCard from '../components/logo/LogoCard.jsx'
 import ColorCard from '../components/palette/ColorCard.jsx'
+import ColorViewer from '../components/palette/ColorViewer.jsx'
 import NewPaletteModal from '../components/palette/NewPaletteModal.jsx'
 import NewLogoModal from '../components/logo/NewLogoModal.jsx'
 import SelectionBar from '../components/logo/SelectionBar.jsx'
@@ -175,6 +176,7 @@ export default function FolderPage() {
   async function handleColorAction(action, color) {
     setMenuLogoId(null)
     if (action === 'delete') setDeleteTarget([color.id])
+    else if (action === 'edit') setViewerId(color.id)
     else if (action === 'copy') {
       try {
         await navigator.clipboard.writeText(color.hex)
@@ -199,10 +201,10 @@ export default function FolderPage() {
     try {
       const nextViewer = (() => {
         if (!viewerId || !deleteTarget.includes(viewerId)) return undefined
-        const at = visibleLogos.findIndex((logo) => logo.id === viewerId)
-        const rest = visibleLogos.filter((logo) => !deleteTarget.includes(logo.id))
-        const following = visibleLogos.slice(at + 1).find((logo) => rest.includes(logo))
-        const before = visibleLogos.slice(0, at).reverse().find((logo) => rest.includes(logo))
+        const at = visibleCards.findIndex((card) => card.id === viewerId)
+        const rest = visibleCards.filter((card) => !deleteTarget.includes(card.id))
+        const following = visibleCards.slice(at + 1).find((card) => rest.includes(card))
+        const before = visibleCards.slice(0, at).reverse().find((card) => rest.includes(card))
         return following ? following.id : before ? before.id : null
       })()
       await deleteLogos(identity.id, deleteTarget, isPalette ? 'paleta' : kind.key)
@@ -304,6 +306,7 @@ export default function FolderPage() {
                 onOpenMenu={setMenuLogoId}
                 onCloseMenu={closeMenu}
                 onAction={handleColorAction}
+                onOpen={setViewerId}
               />
             ))}
             {(isPalette ? [] : visibleLogos).map((logo) => (
@@ -332,7 +335,19 @@ export default function FolderPage() {
         ) : null}
       </PageContainer>
 
-      {viewerId ? (
+      {viewerId && isPalette ? (
+        <ColorViewer
+          colors={visibleColors}
+          colorId={viewerId}
+          deleteOpen={Boolean(deleteTarget)}
+          onChangeColor={setViewerId}
+          onClose={() => setViewerId(null)}
+          onDelete={(color) => setDeleteTarget([color.id])}
+          onUpdate={(colorId, changes) => updateLogo(identity.id, colorId, changes, [], 'paleta')}
+        />
+      ) : null}
+
+      {viewerId && !isPalette ? (
         <LogoViewer
           identity={identity}
           logos={visibleLogos}

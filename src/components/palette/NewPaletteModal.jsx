@@ -109,6 +109,7 @@ export default function NewPaletteModal({ identity, onClose, onSave }) {
       name: row.name,
       hex: row.hex,
       tones: row.tones,
+      useCases: '',
       createdAt: new Date().toISOString(),
     }))
     try {

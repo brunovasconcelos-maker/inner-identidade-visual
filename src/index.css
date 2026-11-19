@@ -2593,3 +2593,99 @@ button {
   flex: 1 0 0;
   min-width: 0;
 }
+
+/* ---------- Color viewer (Figma nodes 6431:31818, 6468:3579) ----------
+   Same overlay, close button, arrows, delete button and panel as the logo viewer. */
+.viewer__card--color {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  padding: 0;
+  overflow: hidden;
+}
+
+.cv-principal {
+  flex: 1 1 0;
+  min-height: 0;
+  cursor: pointer;
+}
+
+.cv-strip {
+  display: flex;
+  flex: none;
+  height: 180px;
+  background: var(--surface-muted);
+}
+
+.cv-strip__tone {
+  flex: 1 0 0;
+  min-width: 0;
+  cursor: pointer;
+}
+
+/* Neighbors of a color: 121.638 x 111 mini card (main color over the strip). */
+.viewer__neighbor--color {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  width: 121.638px;
+  height: 111px;
+  padding: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: linear-gradient(132.745deg, #f4f5f5 14.176%, #f6f6f6 89.903%);
+}
+
+.viewer__neighbor--color.viewer__neighbor--prev {
+  left: calc(var(--viewer-left) - 146px);
+}
+
+.viewer__neighbor--color.viewer__neighbor--next {
+  left: calc(var(--viewer-left) + 583px);
+}
+
+.cv-neighbor__main {
+  display: block;
+  flex: 1 0 0;
+  min-height: 0;
+}
+
+.cv-neighbor__strip {
+  display: flex;
+  flex: none;
+  height: 39.379px;
+  background: var(--surface-muted);
+}
+
+/* Hex tooltip next to the cursor: #0e0e0e, 12px padding, radius 8, 14px regular white. */
+.cv-tooltip {
+  position: fixed;
+  z-index: 130;
+  padding: 12px;
+  border-radius: 8px;
+  background: #0e0e0e;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: normal;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* Sections of the color panel: 12px between the label and its field. */
+.cv-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cv-chip {
+  box-sizing: border-box;
+  height: 40px;
+  padding: 10px 12px;
+}
+
+/* Dividers of the viewer panels run edge to edge (312px) in Figma. */
+.viewer-panel .vp-divider {
+  margin: 0 -24px 0 -16px;
+}
