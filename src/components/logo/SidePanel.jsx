@@ -2,7 +2,7 @@ import { X } from '@phosphor-icons/react'
 
 // Shared shell of the side panels: slides in from the right, header, scrollable
 // content and a footer with "Cancelar" and "Salvar".
-export default function SidePanel({ title, onCancel, onSave, children }) {
+export default function SidePanel({ title, onCancel, onSave, saveDisabled = false, children }) {
   return (
     <aside className="side-panel" role="dialog" aria-label={title}>
       <div className="side-panel__header">
@@ -16,7 +16,7 @@ export default function SidePanel({ title, onCancel, onSave, children }) {
         <button type="button" className="btn btn--ghost" onClick={onCancel}>
           <span className="btn__label">Cancelar</span>
         </button>
-        <button type="button" className="btn btn--primary" onClick={onSave}>
+        <button type="button" className="btn btn--primary" disabled={saveDisabled} onClick={onSave}>
           <span className="btn__label">Salvar</span>
         </button>
       </div>

@@ -8,12 +8,15 @@ import AddCard from '../components/AddCard.jsx'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
 import LogoViewer from '../components/logo/LogoViewer.jsx'
 import LogoCard from '../components/logo/LogoCard.jsx'
+import ColorCard from '../components/palette/ColorCard.jsx'
+import NewPaletteModal from '../components/palette/NewPaletteModal.jsx'
 import NewLogoModal from '../components/logo/NewLogoModal.jsx'
 import SelectionBar from '../components/logo/SelectionBar.jsx'
 import { useIdentities } from '../data/identities.jsx'
 import { findFolder } from '../data/folders.jsx'
 import { kindForSection } from '../data/assetKinds.js'
 import { sortLogos } from '../data/logoTypes.js'
+import { CATEGORIES, sortColors } from '../data/palette.js'
 import { normalize } from '../utils/format.js'
 import { openFilePicker, readImageSize, validateImageFile } from '../utils/files.js'
 import { downloadLogos } from '../utils/download.js'
@@ -28,7 +31,7 @@ function logoMatches(logo, label, term) {
 
 export default function FolderPage() {
   const { id, section } = useParams()
-  const { identities, loading, addLogo, updateLogo, deleteLogos } = useIdentities()
+  const { identities, loading, addLogo, addItems, updateLogo, deleteLogos } = useIdentities()
   const identity = identities.find((item) => item.id === id)
   const folder = findFolder(section)
 
@@ -43,10 +46,12 @@ export default function FolderPage() {
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState(null)
   const [viewerId, setViewerId] = useState(null) // logo open in the viewer
+  const [paletteOpen, setPaletteOpen] = useState(false) // "Nova paleta" modal
   const shareTimer = useRef(null)
 
   // Logo and Ícone share the whole flow (cards, upload modal, viewer, actions).
   const kind = kindForSection(section)
+  const isPalette = section === 'paleta-de-cores'
   const items = identity && folder ? identity[folder.key] : []
   const logos = useMemo(() => {
     if (!kind || !identity) return []
@@ -57,6 +62,25 @@ export default function FolderPage() {
     if (!term) return logos
     return logos.filter((logo) => logoMatches(logo, kind.label(logo), term))
   }, [logos, kind, query])
+  // Colors of the palette folder: brand, primary, secondary. The search looks at the name,
+  // the hex and the category label.
+  const colors = useMemo(
+    () => (isPalette && identity ? sortColors(identity.paleta) : []),
+    [isPalette, identity],
+  )
+  const visibleColors = useMemo(() => {
+    const term = normalize(query.trim())
+    if (!term) return colors
+    return colors.filter(
+      (color) =>
+        normalize(color.name).includes(term) ||
+        normalize(color.hex).includes(term) ||
+        normalize(color.hex.slice(1)).includes(term) ||
+        normalize(CATEGORIES[color.category].cardLabel).includes(term),
+    )
+  }, [colors, query])
+  const visibleCards = isPalette ? visibleColors : visibleLogos
+
   // Items of this folder that match the search. Nothing renders them yet, but the
   // filter is in place for when items exist. The add cards are never filtered.
   const visibleItems = useMemo(() => {
@@ -67,12 +91,12 @@ export default function FolderPage() {
 
   // Only logos that are still visible stay selected (deleted or filtered out ones leave).
   useEffect(() => {
-    const visible = new Set(visibleLogos.map((logo) => logo.id))
+    const visible = new Set(visibleCards.map((card) => card.id))
     setSelectedIds((current) => {
-      const next = current.filter((logoId) => visible.has(logoId))
+      const next = current.filter((cardId) => visible.has(cardId))
       return next.length === current.length ? current : next
     })
-  }, [visibleLogos])
+  }, [visibleCards])
 
   useEffect(() => {
     // The kebab menu closes itself on Esc (capture phase), so this only sees Esc when
@@ -86,12 +110,12 @@ export default function FolderPage() {
         }
         return
       }
-      if (upload || searchOpen || viewerId) return
+      if (upload || searchOpen || viewerId || paletteOpen) return
       if (selectedIds.length > 0) setSelectedIds([])
     }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
-  }, [deleteTarget, deleting, upload, searchOpen, selectedIds, viewerId])
+  }, [deleteTarget, deleting, upload, searchOpen, selectedIds, viewerId, paletteOpen])
 
   useEffect(() => () => clearTimeout(shareTimer.current), [])
 
@@ -147,6 +171,20 @@ export default function FolderPage() {
     }
   }
 
+  // "Editar" has no action yet. "Copiar hex" copies the main hex and shows "Copiado".
+  async function handleColorAction(action, color) {
+    setMenuLogoId(null)
+    if (action === 'delete') setDeleteTarget([color.id])
+    else if (action === 'copy') {
+      try {
+        await navigator.clipboard.writeText(color.hex)
+      } catch (error) {
+        console.error('Could not copy', error)
+      }
+      showShareTip(`copy:${color.id}`)
+    }
+  }
+
   function handleCardAction(action, logo) {
     setMenuLogoId(null)
     if (action === 'download') handleDownload([logo.id])
@@ -167,7 +205,7 @@ export default function FolderPage() {
         const before = visibleLogos.slice(0, at).reverse().find((logo) => rest.includes(logo))
         return following ? following.id : before ? before.id : null
       })()
-      await deleteLogos(identity.id, deleteTarget, kind.key)
+      await deleteLogos(identity.id, deleteTarget, isPalette ? 'paleta' : kind.key)
       if (nextViewer !== undefined) setViewerId(nextViewer)
       setSelectedIds((current) => current.filter((item) => !deleteTarget.includes(item)))
       setDeleteTarget(null)
@@ -204,6 +242,7 @@ export default function FolderPage() {
           {selectedIds.length > 0 ? (
             <SelectionBar
               count={selectedIds.length}
+              onlyDelete={isPalette}
               shareTip={shareTip === 'toolbar'}
               onClear={() => setSelectedIds([])}
               onDelete={() => setDeleteTarget(selectedIds)}
@@ -223,7 +262,7 @@ export default function FolderPage() {
               query={query}
               onQueryChange={setQuery}
               placeholder={`Buscar em ${folder.title}`}
-              escapeEnabled={!upload && !deleteTarget && !viewerId}
+              escapeEnabled={!upload && !deleteTarget && !viewerId && !paletteOpen}
               triggerClassName="toolbar-icon-btn"
               iconSize={24}
             />
@@ -235,7 +274,7 @@ export default function FolderPage() {
           </div>
         </div>
 
-        {folder.cards.length > 0 || visibleLogos.length > 0 ? (
+        {folder.cards.length > 0 || visibleCards.length > 0 ? (
           <div className="add-grid">
             {folder.cards.map((card) => (
               <AddCard
@@ -244,10 +283,30 @@ export default function FolderPage() {
                 label={card.label}
                 disabled={card.isEnabled ? !card.isEnabled(identity) : false}
                 disabledStyle={card.disabledStyle}
-                onClick={card.action === 'upload-asset' ? handleUpload : undefined}
+                onClick={
+                  card.action === 'upload-asset'
+                    ? handleUpload
+                    : card.action === 'create-palette'
+                      ? () => setPaletteOpen(true)
+                      : undefined
+                }
               />
             ))}
-            {visibleLogos.map((logo) => (
+            {visibleColors.map((color) => (
+              <ColorCard
+                key={color.id}
+                color={color}
+                selected={selectedIds.includes(color.id)}
+                selecting={selectedIds.length > 0}
+                menuOpen={menuLogoId === color.id}
+                copiedTip={shareTip === `copy:${color.id}`}
+                onToggleSelect={toggleSelect}
+                onOpenMenu={setMenuLogoId}
+                onCloseMenu={closeMenu}
+                onAction={handleColorAction}
+              />
+            ))}
+            {(isPalette ? [] : visibleLogos).map((logo) => (
               <LogoCard
                 key={logo.id}
                 logo={logo}
@@ -293,7 +352,13 @@ export default function FolderPage() {
 
       {deleteTarget ? (
         <ConfirmDialog
-          title={kind.deleteTitle(deleteTarget.length)}
+          title={
+            isPalette
+              ? deleteTarget.length === 1
+                ? 'Excluir cor?'
+                : `Excluir ${deleteTarget.length} cores?`
+              : kind.deleteTitle(deleteTarget.length)
+          }
           text="Essa ação não pode ser desfeita."
           cancelLabel="Cancelar"
           confirmLabel="Excluir"
@@ -304,6 +369,14 @@ export default function FolderPage() {
             setDeleteError(null)
           }}
           onConfirm={confirmDelete}
+        />
+      ) : null}
+
+      {paletteOpen ? (
+        <NewPaletteModal
+          identity={identity}
+          onClose={() => setPaletteOpen(false)}
+          onSave={(items) => addItems(identity.id, items, 'paleta')}
         />
       ) : null}
 

@@ -137,6 +137,20 @@ export function IdentitiesProvider({ children }) {
     return next
   }, [])
 
+  // Saves several items at once in one folder (for example the colors of a palette).
+  // Rejects if the data could not be persisted.
+  const addItems = useCallback(async (identityId, items, key) => {
+    const current = identitiesRef.current.find((item) => item.id === identityId)
+    if (!current) throw new Error('Identity not found')
+    const next = { ...current, [key]: [...current[key], ...items] }
+    await saveIdentity(next)
+    setState((s) => ({
+      ...s,
+      identities: s.identities.map((item) => (item.id === identityId ? next : item)),
+    }))
+    return next
+  }, [])
+
   // Updates the editable fields of a logo, plus the custom usage rights created while
   // editing it. Rejects if the change could not be persisted.
   const updateLogo = useCallback(async (identityId, logoId, changes, customRights = [], key = 'logos') => {
@@ -177,10 +191,11 @@ export function IdentitiesProvider({ children }) {
       loading: state.loading,
       createIdentity,
       addLogo,
+      addItems,
       updateLogo,
       deleteLogos,
     }),
-    [state, createIdentity, addLogo, updateLogo, deleteLogos],
+    [state, createIdentity, addLogo, addItems, updateLogo, deleteLogos],
   )
 
   return <IdentitiesContext.Provider value={value}>{children}</IdentitiesContext.Provider>

@@ -44,7 +44,12 @@ export const FOLDERS = [
     key: 'paleta',
     title: 'Paleta de cores',
     cards: [
-      { id: 'create', icon: <Palette {...ICON} />, label: 'Crie sua paleta\nde cores' },
+      {
+        id: 'create',
+        icon: <Palette {...ICON} />,
+        label: 'Crie sua paleta\nde cores',
+        action: 'create-palette',
+      },
       {
         id: 'from-logo',
         icon: <Sparkle {...ICON} />,
