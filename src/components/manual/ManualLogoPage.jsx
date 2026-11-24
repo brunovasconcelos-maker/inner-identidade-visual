@@ -40,7 +40,9 @@ export default function ManualLogoPage({ identity, sub }) {
     const el = document.getElementById(`logo-${sub}`)
     if (!el) return
     lockSpy()
-    el.scrollIntoView({ block: 'start', behavior: 'auto' })
+    // The first section shows the whole page from the top, with the "Logo" title.
+    if (types[0] && types[0].id === sub) window.scrollTo(0, 0)
+    else el.scrollIntoView({ block: 'start', behavior: 'auto' })
   }, [sub])
 
   useEffect(() => {
@@ -78,7 +80,8 @@ export default function ManualLogoPage({ identity, sub }) {
         state.current.handled = id
         navigate(manualPath(idRef.current, 'logo', id), { replace: true })
       }
-      el.scrollIntoView({ block: 'start', behavior: 'smooth' })
+      if (types[0] && types[0].id === id) window.scrollTo({ top: 0, behavior: 'smooth' })
+      else el.scrollIntoView({ block: 'start', behavior: 'smooth' })
     }
 
     window.addEventListener('scroll', onScroll, { passive: true })

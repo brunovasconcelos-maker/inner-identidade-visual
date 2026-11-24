@@ -7,10 +7,11 @@ import { visibleBounds } from '../../utils/imageColor.js'
 const BOX = { width: 580, height: 360 }
 // Light blue of the manual in Figma (the selected sidebar tile, 96BFE9 at 93%).
 const GUIDE = 'rgba(150, 191, 233, 0.93)'
-// Safe space = reference letter height, as a proportion of the visible logo height. The
-// Figma sample has no guides, so this is the height of its lettering over the whole logo
-// (43.70 / 197).
-export const SAFE_SPACE_RATIO = 43.70059585571289 / 197
+// Safe space `s` = height of the wordmark letters, detected in the logo image. Without a row
+// of letters (an icon, for example) it is 15% of the smaller side of the visible logo.
+const FALLBACK_RATIO = 0.15
+// The diagram never touches the edge of its box.
+const PADDING = 20
 
 // Cap height of a letter in a font, as a fraction of the font size (measured on a canvas).
 function useCapRatio(letter, font) {
@@ -22,7 +23,8 @@ function useCapRatio(letter, font) {
       const context = document.createElement('canvas').getContext('2d')
       context.font = spec
       const ascent = context.measureText(letter).actualBoundingBoxAscent
-      if (alive && ascent > 0) setRatio(ascent / 100)
+      // A failed measure (font not ready) keeps the Inter cap height.
+      if (alive && ascent / 100 > 0.3 && ascent / 100 < 1.2) setRatio(ascent / 100)
     }
     if (document.fonts && document.fonts.load) {
       document.fonts.load(spec, letter).then(measure, measure)
@@ -82,7 +84,10 @@ export default function SafeSpaceDiagram({ file, identity, letter, area }) {
     width: (bounds.x1 - bounds.x0) * image.width,
     height: (bounds.y1 - bounds.y0) * image.height,
   }
-  const s = inner.height * SAFE_SPACE_RATIO
+  const s =
+    bounds.letterHeight !== null
+      ? bounds.letterHeight * image.height
+      : FALLBACK_RATIO * Math.min(inner.width, inner.height)
   const outer = { x: inner.x - s, y: inner.y - s, width: inner.width + 2 * s, height: inner.height + 2 * s }
   const innerRight = inner.x + inner.width
   const innerBottom = inner.y + inner.height
@@ -115,8 +120,14 @@ export default function SafeSpaceDiagram({ file, identity, letter, area }) {
     [innerRight, innerBottom],
   ]
 
+  // The diagram scales down when the outer rectangle would not fit, and stays centered.
+  const fit = Math.min(1, (BOX.width - 2 * PADDING) / outer.width, (BOX.height - 2 * PADDING) / outer.height)
+  const ocx = outer.x + outer.width / 2
+  const ocy = outer.y + outer.height / 2
+
   return (
     <svg className="manual-safe" viewBox={`0 0 ${BOX.width} ${BOX.height}`} role="img" aria-label="Safe space">
+      <g transform={`translate(${BOX.width / 2} ${BOX.height / 2}) scale(${fit}) translate(${-ocx} ${-ocy})`}>
       <image href={url} x={image.x} y={image.y} width={image.width} height={image.height} preserveAspectRatio="xMidYMid meet" />
       <g fill="none" stroke={GUIDE} strokeWidth="1">
         <rect x={outer.x} y={outer.y} width={outer.width} height={outer.height} />
@@ -133,6 +144,7 @@ export default function SafeSpaceDiagram({ file, identity, letter, area }) {
       {letterAt(cx, innerBottom + s / 2, 0)}
       {letterAt(outer.x + s / 2, cy, -90)}
       {letterAt(innerRight + s / 2, cy, 90)}
+      </g>
     </svg>
   )
 }

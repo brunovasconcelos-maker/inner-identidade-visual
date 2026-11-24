@@ -3069,7 +3069,8 @@ a.btn {
 }
 
 .manual-kebab {
-  position: absolute;
+  position: fixed;
+  z-index: 20;
   top: 16px;
   right: 20px;
   display: flex;

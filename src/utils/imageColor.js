@@ -58,13 +58,84 @@ export async function dominantColor(file) {
   }
 }
 
-// Visible bounds of an image (transparent pixels trimmed) as fractions of its natural size:
-// { x0, y0, x1, y1, ratio } with ratio = natural width / natural height. An image without
-// transparency, or one that cannot be read, is visible as a whole.
+// Connected components (8 neighbors) of the opaque pixels. Each one: bounding box + area.
+function components(mask, width, height) {
+  const seen = new Uint8Array(mask.length)
+  const stack = new Int32Array(mask.length)
+  const list = []
+  for (let start = 0; start < mask.length; start += 1) {
+    if (!mask[start] || seen[start]) continue
+    let top = 0
+    stack[top++] = start
+    seen[start] = 1
+    let minX = width
+    let maxX = -1
+    let minY = height
+    let maxY = -1
+    let area = 0
+    while (top > 0) {
+      const index = stack[--top]
+      const x = index % width
+      const y = (index - x) / width
+      area += 1
+      if (x < minX) minX = x
+      if (x > maxX) maxX = x
+      if (y < minY) minY = y
+      if (y > maxY) maxY = y
+      for (let dy = -1; dy <= 1; dy += 1) {
+        for (let dx = -1; dx <= 1; dx += 1) {
+          const nx = x + dx
+          const ny = y + dy
+          if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue
+          const next = ny * width + nx
+          if (mask[next] && !seen[next]) {
+            seen[next] = 1
+            stack[top++] = next
+          }
+        }
+      }
+    }
+    list.push({ minX, maxX, minY, maxY, area, height: maxY - minY + 1, bottom: maxY + 1 })
+  }
+  return list
+}
+
+// Height of the wordmark letters (the cap height), in pixels of the mask: the largest group
+// of 3 or more components with similar height (within 15%) and aligned bottoms (within 10%
+// of that height). Returns the median height of that group, or null without a row of letters.
+export function wordmarkLetterHeight(blobs) {
+  const candidates = blobs
+    .filter((blob) => blob.height >= 3 && blob.area >= 6)
+    .sort((a, b) => b.area - a.area)
+    .slice(0, 400)
+  let best = null
+  for (const ref of candidates) {
+    const group = candidates.filter(
+      (blob) =>
+        Math.abs(blob.height - ref.height) <= 0.15 * ref.height &&
+        Math.abs(blob.bottom - ref.bottom) <= 0.1 * ref.height,
+    )
+    if (group.length < 3) continue
+    const heights = group.map((blob) => blob.height).sort((a, b) => a - b)
+    const median =
+      heights.length % 2 ? heights[(heights.length - 1) / 2] : (heights[heights.length / 2 - 1] + heights[heights.length / 2]) / 2
+    if (!best || group.length > best.count || (group.length === best.count && median > best.median)) {
+      best = { count: group.length, median }
+    }
+  }
+  return best ? best.median : null
+}
+
+// Analysis of a logo image: its visible bounds (transparent pixels trimmed) and the height
+// of its wordmark letters, both as fractions of the natural size:
+// { x0, y0, x1, y1, ratio, letterHeight } with ratio = natural width / natural height and
+// letterHeight null when no row of letters is found. An image without transparency, or one
+// that cannot be read, is visible as a whole.
 export async function visibleBounds(file) {
-  const whole = { x0: 0, y0: 0, x1: 1, y1: 1, ratio: 1 }
+  const whole = { x0: 0, y0: 0, x1: 1, y1: 1, ratio: 1, letterHeight: null }
   try {
-    const { data, width, height, naturalWidth, naturalHeight } = await rasterize(file, 512)
+    const { data, width, height, naturalWidth, naturalHeight } = await rasterize(file, 768)
+    const mask = new Uint8Array(width * height)
     let x0 = width
     let y0 = height
     let x1 = -1
@@ -72,6 +143,7 @@ export async function visibleBounds(file) {
     for (let y = 0; y < height; y += 1) {
       for (let x = 0; x < width; x += 1) {
         if (data[(y * width + x) * 4 + 3] <= 8) continue
+        mask[y * width + x] = 1
         if (x < x0) x0 = x
         if (x > x1) x1 = x
         if (y < y0) y0 = y
@@ -80,7 +152,15 @@ export async function visibleBounds(file) {
     }
     const ratio = naturalWidth / naturalHeight
     if (x1 < 0) return { ...whole, ratio }
-    return { x0: x0 / width, y0: y0 / height, x1: (x1 + 1) / width, y1: (y1 + 1) / height, ratio }
+    const letters = wordmarkLetterHeight(components(mask, width, height))
+    return {
+      x0: x0 / width,
+      y0: y0 / height,
+      x1: (x1 + 1) / width,
+      y1: (y1 + 1) / height,
+      ratio,
+      letterHeight: letters === null ? null : letters / height,
+    }
   } catch {
     return whole
   }
