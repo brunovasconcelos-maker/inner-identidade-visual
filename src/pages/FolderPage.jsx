@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
-import { Desktop, SlidersHorizontal } from '@phosphor-icons/react'
+import { SlidersHorizontal } from '@phosphor-icons/react'
+import ManualLink from '../components/manual/ManualLink.jsx'
 import PageContainer from '../components/PageContainer.jsx'
 import Breadcrumb from '../components/Breadcrumb.jsx'
 import ExpandableSearch from '../components/ExpandableSearch.jsx'
@@ -306,11 +307,7 @@ export default function FolderPage() {
       <PageContainer>
         <div className="detail-top">
           <Breadcrumb name={identity.name} to={`/id/${identity.id}`} current={folder.title} />
-          {/* Visual only, no action. */}
-          <button type="button" className="btn btn--outline btn--with-icon btn--manual">
-            <span className="btn__label">Ver meu manual</span>
-            <Desktop size={20} weight="regular" />
-          </button>
+          <ManualLink identityId={identity.id} />
         </div>
       </PageContainer>
 

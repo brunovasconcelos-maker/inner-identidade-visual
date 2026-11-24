@@ -1,12 +1,12 @@
 import { Navigate, useParams } from 'react-router-dom'
 import {
   AppleLogo,
-  Desktop,
   Swatches,
   TextT,
   TrademarkRegistered,
   PuzzlePiece,
 } from '@phosphor-icons/react'
+import ManualLink from '../components/manual/ManualLink.jsx'
 import PageContainer from '../components/PageContainer.jsx'
 import Breadcrumb from '../components/Breadcrumb.jsx'
 import FolderCard from '../components/FolderCard.jsx'
@@ -26,11 +26,7 @@ export default function IdentityDetail() {
     <PageContainer>
       <div className="detail-top">
         <Breadcrumb name={identity.name} to="/" />
-        {/* Visual only, no action. */}
-        <button type="button" className="btn btn--outline btn--with-icon btn--manual">
-          <span className="btn__label">Ver meu manual</span>
-          <Desktop size={20} weight="regular" />
-        </button>
+        <ManualLink identityId={identity.id} />
       </div>
 
       <h1 className="detail-title">{identity.name}</h1>

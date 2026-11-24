@@ -8,6 +8,7 @@ import {
   useState,
 } from 'react'
 import { loadAllIdentities, saveIdentities, saveIdentity } from '../storage/db.js'
+import { withDefaultLogoTexts, withDefaultTextsInIdentity } from './defaultTexts.js'
 
 // Persistence moved from localStorage to IndexedDB. This is the old key, read once
 // to migrate existing identities.
@@ -62,7 +63,11 @@ function removeLegacy() {
 
 async function loadInitial() {
   try {
-    const stored = (await loadAllIdentities()).map(migrate)
+    const migrated = (await loadAllIdentities()).map(migrate)
+    // One time migration: principal logos with empty texts get the default ones.
+    const stored = migrated.map(withDefaultTextsInIdentity)
+    const changed = stored.filter((identity, index) => identity !== migrated[index])
+    if (changed.length > 0) await saveIdentities(changed)
     if (stored.length > 0) return stored
     const legacy = readLegacy()
     if (legacy.length > 0) {
@@ -122,6 +127,7 @@ export function IdentitiesProvider({ children }) {
   const addLogo = useCallback(async (identityId, logo, customRights = [], key = 'logos') => {
     const current = identitiesRef.current.find((item) => item.id === identityId)
     if (!current) throw new Error('Identity not found')
+    if (key === 'logos') logo = withDefaultLogoTexts(logo, current.name)
     const known = new Set(current.customUsageRights.map((right) => right.toLowerCase()))
     const added = customRights.filter((right) => !known.has(right.toLowerCase()))
     const next = {
@@ -160,7 +166,11 @@ export function IdentitiesProvider({ children }) {
     const added = customRights.filter((right) => !known.has(right.toLowerCase()))
     const next = {
       ...current,
-      [key]: current[key].map((logo) => (logo.id === logoId ? { ...logo, ...changes } : logo)),
+      [key]: current[key].map((logo) => {
+        if (logo.id !== logoId) return logo
+        const updated = { ...logo, ...changes }
+        return key === 'logos' ? withDefaultLogoTexts(updated, current.name) : updated
+      }),
       customUsageRights: [...current.customUsageRights, ...added],
     }
     await saveIdentity(next)

@@ -102,3 +102,21 @@ export async function downloadFonts(identityName, fonts) {
   )
   return { skipped }
 }
+
+// "Download todas as versões" of one logo: "[identity name]-logo-principal.zip" with the
+// original file and every monochrome version.
+export async function downloadLogoVersions(identityName, logo, suffix = 'logo-principal') {
+  const files = {}
+  const put = async (path, blob) => {
+    const extension = extensionOf(path)
+    const stem = extension ? path.slice(0, -extension.length) : path
+    let target = path
+    for (let n = 2; files[target]; n += 1) target = `${stem}-${n}${extension}`
+    files[target] = await bytesOf(blob)
+  }
+  await put(safeName(logo.fileName), logo.file)
+  for (const version of logo.monoVersions || []) {
+    await put(`monocromaticas/${safeName(version.name)}${extensionOf(version.fileName)}`, version.file)
+  }
+  saveBlob(new Blob([zipSync(files)], { type: 'application/zip' }), `${safeName(identityName)}-${suffix}.zip`)
+}
