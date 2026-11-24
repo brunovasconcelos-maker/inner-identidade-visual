@@ -113,7 +113,7 @@ export default function FontCard({
                     className="menu-row"
                     onClick={() => onAction(action, font)}
                   >
-                    <Icon size={24} color="#5d5d5d" weight="fill" />
+                    <Icon size={24} color="#5d5d5d" weight="regular" />
                     <span className="menu-row__label">{label}</span>
                   </button>
                 ))}
