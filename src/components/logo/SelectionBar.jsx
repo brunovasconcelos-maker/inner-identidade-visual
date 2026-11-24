@@ -9,6 +9,8 @@ export default function SelectionBar({
   onDownload,
   onShare,
   onlyDelete = false,
+  hideShare = false,
+  downloadTip = null,
 }) {
   return (
     <div className="selection-bar">
@@ -24,15 +26,20 @@ export default function SelectionBar({
         </button>
         {onlyDelete ? null : (
           <>
-            <button type="button" className="selection-bar__btn" aria-label="Baixar" onClick={onDownload}>
-              <DownloadSimple size={20} color="#5d5d5d" weight="regular" />
-            </button>
             <span className="selection-bar__share">
-              <button type="button" className="selection-bar__btn" aria-label="Compartilhar" onClick={onShare}>
-                <Share size={20} color="#5d5d5d" weight="regular" />
+              <button type="button" className="selection-bar__btn" aria-label="Baixar" onClick={onDownload}>
+                <DownloadSimple size={20} color="#5d5d5d" weight="regular" />
               </button>
-              {shareTip ? <span className="tooltip">Em breve</span> : null}
+              {downloadTip ? <span className="tooltip">{downloadTip}</span> : null}
             </span>
+            {hideShare ? null : (
+              <span className="selection-bar__share">
+                <button type="button" className="selection-bar__btn" aria-label="Compartilhar" onClick={onShare}>
+                  <Share size={20} color="#5d5d5d" weight="regular" />
+                </button>
+                {shareTip ? <span className="tooltip">Em breve</span> : null}
+              </span>
+            )}
           </>
         )}
       </div>

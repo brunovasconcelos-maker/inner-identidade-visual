@@ -2689,3 +2689,232 @@ button {
 .viewer-panel .vp-divider {
   margin: 0 -24px 0 -16px;
 }
+
+/* ---------- Tipografia (Figma nodes 6439:33874, 6439:34072, 6439:34246, 6439:34591,
+   6444:57, 6444:196) ---------- */
+
+/* Font box of the modal: tile with "Aa", family name, trash and replace. */
+.font-field {
+  position: relative;
+  width: 100%;
+}
+
+.font-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-sizing: border-box;
+  width: 100%;
+  height: 86px;
+  padding: 12px 24px 12px 12px;
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  background: var(--surface-white);
+  text-align: left;
+}
+
+.font-box--empty {
+  cursor: pointer;
+}
+
+.font-box__tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 60px;
+  height: 60px;
+  padding: 2px 1px;
+  border-radius: 12px;
+  background: var(--surface-muted);
+  overflow: hidden;
+}
+
+.font-box__aa {
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.23px;
+  color: var(--text-default);
+  white-space: nowrap;
+}
+
+.font-box__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: -0.28px;
+  color: var(--text-default);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.font-box__name--placeholder {
+  color: var(--text-neutral);
+}
+
+.font-box__actions {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.font-error {
+  margin-top: 8px;
+  font-size: 14px;
+  line-height: 1.3;
+  color: var(--text-secondary);
+}
+
+.logo-footer--end {
+  justify-content: flex-end;
+}
+
+.logo-row:disabled {
+  cursor: not-allowed;
+}
+
+.logo-row:disabled .logo-row__label,
+.logo-row:disabled .logo-row__value {
+  color: var(--text-secondary);
+}
+
+/* Weights panel. */
+.weights-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 12px 16px;
+}
+
+.weights-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.weights-row__label {
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.23px;
+  color: var(--text-default);
+  white-space: nowrap;
+}
+
+/* Font picker (Google Fonts): not in Figma, built with the existing menu styles. */
+.font-picker {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  background: var(--surface-white);
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.font-picker__search {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 48px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--border-default);
+}
+
+.font-picker__input {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.3;
+  color: var(--text-default);
+}
+
+.font-picker__input::placeholder {
+  color: var(--text-secondary);
+}
+
+.font-picker__cats {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-default);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.font-picker__cats::-webkit-scrollbar {
+  display: none;
+}
+
+.font-picker__cat {
+  flex: none;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--border-default);
+  border-radius: 360px;
+  background: var(--surface-white);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: -0.28px;
+  color: var(--text-neutral);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.font-picker__cat--active {
+  border-color: #000000;
+  background: #000000;
+  color: #ffffff;
+}
+
+.font-picker__list {
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.font-picker__row {
+  justify-content: space-between;
+}
+
+.font-picker__name {
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.3;
+  color: var(--text-default);
+}
+
+.font-picker__empty {
+  padding: 16px;
+  font-size: 14px;
+  line-height: 1.3;
+  color: var(--text-secondary);
+}
+
+/* Font cards of the grid: "Aa" 98px in the font, centered in the 160px preview. */
+.font-card__aa {
+  font-size: 98px;
+  line-height: 1;
+  letter-spacing: -0.7044px;
+  color: var(--text-default);
+  white-space: nowrap;
+}

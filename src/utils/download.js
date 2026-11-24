@@ -52,3 +52,46 @@ export async function downloadLogos(identityName, logos, kind = ASSET_KINDS.logo
   const zipped = zipSync(files)
   saveBlob(new Blob([zipped], { type: 'application/zip' }), `${safeName(identityName)}-${kind.zipSuffix}.zip`)
 }
+
+// Fonts: one uploaded font with a single file downloads that file; one with several files
+// downloads "[family].zip"; several fonts go in one "[identity name]-tipografia.zip", one
+// folder per family. Google fonts have no files, so they are skipped. Resolves with how
+// many were skipped.
+export async function downloadFonts(identityName, fonts) {
+  const uploads = fonts.filter((font) => font.source === 'upload')
+  const skipped = fonts.length - uploads.length
+  if (uploads.length === 0) return { skipped }
+
+  const filesOf = (font) => font.weights.filter((weight) => weight.file).map((weight) => weight.file)
+  const addAll = async (target, prefix, files) => {
+    for (const file of files) {
+      const base = safeName(file.name)
+      const extension = extensionOf(base)
+      const stem = extension ? base.slice(0, -extension.length) : base
+      let path = `${prefix}${base}`
+      for (let n = 2; target[path]; n += 1) path = `${prefix}${stem}-${n}${extension}`
+      target[path] = await bytesOf(file)
+    }
+  }
+
+  if (uploads.length === 1) {
+    const [font] = uploads
+    const files = filesOf(font)
+    if (files.length === 1) {
+      saveBlob(files[0], files[0].name)
+    } else {
+      const entries = {}
+      await addAll(entries, '', files)
+      saveBlob(new Blob([zipSync(entries)], { type: 'application/zip' }), `${safeName(font.family)}.zip`)
+    }
+    return { skipped }
+  }
+
+  const entries = {}
+  for (const font of uploads) await addAll(entries, `${safeName(font.family)}/`, filesOf(font))
+  saveBlob(
+    new Blob([zipSync(entries)], { type: 'application/zip' }),
+    `${safeName(identityName)}-tipografia.zip`,
+  )
+  return { skipped }
+}

@@ -4,13 +4,20 @@ import SidePanel from './SidePanel.jsx'
 import { LOGO_TYPES } from '../../data/logoTypes.js'
 
 // Single selection, never empty. Types used by another logo of the identity are disabled.
-export default function TypePanel({ currentType, usedTypes, onSave, onCancel }) {
+export default function TypePanel({
+  currentType,
+  usedTypes,
+  onSave,
+  onCancel,
+  title = 'Tipo de logo',
+  options = LOGO_TYPES,
+}) {
   const [selected, setSelected] = useState(currentType)
 
   return (
-    <SidePanel title="Tipo de logo" onCancel={onCancel} onSave={() => onSave(selected)}>
+    <SidePanel title={title} onCancel={onCancel} onSave={() => onSave(selected)}>
       <div className="option-list">
-        {LOGO_TYPES.map((type) => {
+        {options.map((type) => {
           const disabled = usedTypes.has(type.id)
           const isSelected = selected === type.id
           return (

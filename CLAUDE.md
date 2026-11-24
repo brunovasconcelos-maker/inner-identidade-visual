@@ -17,4 +17,5 @@ Data: identities and their files persist in IndexedDB (`src/storage/db.js`). loc
 - **Never substitute a missing asset, icon or font with a placeholder silently.** Stop and report exactly what is missing.
 - **Disabled buttons** share one variant: background #efefef, text #798282, cursor not-allowed, no hover.
 - **Never use em dashes** in any UI text.
+- **Font weight names follow the market standard (e.g. Light 300 Italic), as an exception to sentence case.**
 - **If something in the design is unclear, ask before assuming.**

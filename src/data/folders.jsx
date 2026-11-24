@@ -1,5 +1,6 @@
 import { FilePlus, Package, Palette, Sparkle, TextAa } from '@phosphor-icons/react'
 import { firstFreeLogoType } from './logoTypes.js'
+import { firstFreeFontType } from './typography.js'
 
 // Folder pages of an identity. `key` is the array on the identity, `slug` the route.
 // A card with `requires` is disabled until that rule is true for the identity.
@@ -64,8 +65,20 @@ export const FOLDERS = [
     key: 'tipografia',
     title: 'Tipografia',
     cards: [
-      upload('Faça upload de uma tipografia'),
-      { id: 'free', icon: <TextAa {...ICON} />, label: 'Selecione uma tipografia grátis' },
+      upload('Faça upload de uma tipografia', {
+        action: 'upload-font',
+        disabledStyle: 'filled',
+        // Disabled once the three font types (principal, secundária, digital) are used.
+        isEnabled: (identity) => firstFreeFontType(identity.tipografia) !== null,
+      }),
+      {
+        id: 'free',
+        icon: <TextAa {...ICON} />,
+        label: 'Selecione uma tipografia grátis',
+        action: 'google-font',
+        disabledStyle: 'filled',
+        isEnabled: (identity) => firstFreeFontType(identity.tipografia) !== null,
+      },
     ],
   },
   {
