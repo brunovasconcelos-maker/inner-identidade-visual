@@ -2,26 +2,11 @@ import { useEffect, useState } from 'react'
 import { DownloadSimple } from '@phosphor-icons/react'
 import { useObjectUrl } from '../../hooks/useObjectUrl.js'
 import { downloadLogoVersions, saveBlob } from '../../utils/download.js'
-import { dominantColor } from '../../utils/imageColor.js'
-import { previewBgFor } from '../../utils/files.js'
+import { dominantColor, lowContrastBackground } from '../../utils/imageColor.js'
+import SafeSpaceDiagram from './SafeSpaceDiagram.jsx'
 
 const BOX_LIGHT = '#f7f7f7'
 const BOX_DARK = '#000000'
-
-// Box background by contrast: black for light logos, the light gray for dark logos.
-function useAutoBg(file) {
-  const [bg, setBg] = useState(BOX_LIGHT)
-  useEffect(() => {
-    let alive = true
-    previewBgFor(file).then((value) => {
-      if (alive) setBg(value === '#000000' ? BOX_DARK : BOX_LIGHT)
-    })
-    return () => {
-      alive = false
-    }
-  }, [file])
-  return bg
-}
 
 // Gray (or black) box with the logo contained and centered. The download button shows
 // on hover only.
@@ -49,9 +34,9 @@ function ImageBox({ file, fileName, bg, height, inner, label }) {
   )
 }
 
+// The original logo is always shown on the neutral gray.
 function OriginalBox({ file, fileName, height, inner, label }) {
-  const bg = useAutoBg(file)
-  return <ImageBox file={file} fileName={fileName} bg={bg} height={height} inner={inner} label={label} />
+  return <ImageBox file={file} fileName={fileName} bg={BOX_LIGHT} height={height} inner={inner} label={label} />
 }
 
 // A box that renders the logo with one incorrect use applied in code.
@@ -83,8 +68,8 @@ const MISUSE_INTRO =
 
 // Logo > Principal page of the manual (Figma node 6479:5211).
 export default function ManualLogoPrincipal({ identity, logo }) {
+  const letter = (identity.name.trim()[0] || '').toUpperCase()
   const monoVersions = logo.monoVersions || []
-  const brandColor = identity.paleta.find((color) => color.category === 'marca')
   const [dominant, setDominant] = useState('#000000')
   useEffect(() => {
     let alive = true
@@ -95,7 +80,7 @@ export default function ManualLogoPrincipal({ identity, logo }) {
       alive = false
     }
   }, [logo.file])
-  const noContrastBg = brandColor ? brandColor.hex : dominant
+  const noContrastBg = lowContrastBackground(dominant)
 
   const HERO = [324.153, 250.416]
   const VARIANT = [255.008, 197]
@@ -125,31 +110,39 @@ export default function ManualLogoPrincipal({ identity, logo }) {
         </div>
       </section>
 
-      <div className="manual-divider" />
+      {monoVersions.length > 0 ? (
+        <>
+          <div className="manual-divider" />
 
-      <section className="manual-block manual-block--column">
-        <div className="manual-row">
-          <div className="manual-text-block manual-text-block--narrow">
-            <h2 className="manual-h2">Variantes da logo</h2>
-            <p className="manual-p">{VARIANTS_TEXT}</p>
-          </div>
-          <div className="manual-box-wrap">
-            <OriginalBox file={logo.file} fileName={logo.fileName} height={360} inner={VARIANT} label="Logo original" />
-          </div>
-        </div>
-        {monoVersions.map((version) => (
-          <div className="manual-box-wrap" key={version.id}>
-            <ImageBox
-              file={version.file}
-              fileName={version.fileName}
-              bg={version.previewBg === '#000000' ? BOX_DARK : BOX_LIGHT}
-              height={360}
-              inner={VARIANT}
-              label={version.name}
-            />
-          </div>
-        ))}
-      </section>
+          <section className="manual-block manual-block--column">
+            {monoVersions.map((version, index) => {
+              const box = (
+                <div className="manual-box-wrap" key={version.id}>
+                  <ImageBox
+                    file={version.file}
+                    fileName={version.fileName}
+                    bg={version.previewBg === '#000000' ? BOX_DARK : BOX_LIGHT}
+                    height={360}
+                    inner={VARIANT}
+                    label={version.name}
+                  />
+                </div>
+              )
+              return index === 0 ? (
+                <div className="manual-row" key={version.id}>
+                  <div className="manual-text-block manual-text-block--narrow">
+                    <h2 className="manual-h2">Variantes da logo</h2>
+                    <p className="manual-p">{VARIANTS_TEXT}</p>
+                  </div>
+                  {box}
+                </div>
+              ) : (
+                box
+              )
+            })}
+          </section>
+        </>
+      ) : null}
 
       <div className="manual-divider" />
 
@@ -158,7 +151,7 @@ export default function ManualLogoPrincipal({ identity, logo }) {
           <h2 className="manual-h2">Safe space</h2>
           <div className="manual-p">
             <p>
-              {`A área de proteção garante que a logo tenha espaço para respirar e seja lida com clareza. Ela é medida pela altura da letra “${(identity.name.trim()[0] || '').toUpperCase()}” e deve ficar livre em todos os lados da logo.`}
+              {`A área de proteção garante que a logo tenha espaço para respirar e seja lida com clareza. Ela é medida pela altura da letra “${letter}” e deve ficar livre em todos os lados da logo.`}
             </p>
             <p>
               Nenhum texto, imagem ou elemento gráfico deve invadir esse espaço. Quando a logo mudar de tamanho, a área de proteção acompanha a mesma proporção.
@@ -166,7 +159,9 @@ export default function ManualLogoPrincipal({ identity, logo }) {
           </div>
         </div>
         <div className="manual-box-wrap">
-          <SafeSpaceBox file={logo.file} />
+          <div className="manual-box manual-box--static" style={{ background: BOX_LIGHT, height: 360 }}>
+            <SafeSpaceDiagram file={logo.file} identity={identity} letter={letter} />
+          </div>
         </div>
       </section>
 
@@ -196,16 +191,5 @@ export default function ManualLogoPrincipal({ identity, logo }) {
         </div>
       </section>
     </>
-  )
-}
-
-// The Figma node only shows the logo in this box (no guide lines, letters or squares).
-function SafeSpaceBox({ file }) {
-  const url = useObjectUrl(file)
-  const bg = useAutoBg(file)
-  return (
-    <div className="manual-box manual-box--static" style={{ background: bg, height: 360 }}>
-      {url ? <img className="manual-box__img" style={{ width: 255.008, height: 197 }} src={url} alt="" /> : null}
-    </div>
   )
 }
