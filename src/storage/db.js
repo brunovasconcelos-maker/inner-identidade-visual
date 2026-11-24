@@ -54,6 +54,13 @@ export function saveIdentity(identity) {
   })
 }
 
+// Removes an identity and, with it, every file stored inside the record.
+export function deleteIdentityRecord(id) {
+  return run('readwrite', (store) => {
+    store.delete(id)
+  })
+}
+
 export function saveIdentities(identities) {
   return run('readwrite', (store) => {
     identities.forEach((identity) => store.put(identity))

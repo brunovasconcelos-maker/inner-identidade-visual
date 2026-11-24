@@ -7,7 +7,7 @@ import {
   useRef,
   useState,
 } from 'react'
-import { loadAllIdentities, saveIdentities, saveIdentity } from '../storage/db.js'
+import { deleteIdentityRecord, loadAllIdentities, saveIdentities, saveIdentity } from '../storage/db.js'
 import { withDefaultLogoTexts, withDefaultTextsInIdentity } from './defaultTexts.js'
 
 // Persistence moved from localStorage to IndexedDB. This is the old key, read once
@@ -195,17 +195,51 @@ export function IdentitiesProvider({ children }) {
     return next
   }, [])
 
+  // Full copy of an identity (every folder and item, files included) with new ids. The copy
+  // is named "[name] (cópia)", "[name] (cópia 2)" and so on, and shows up right away.
+  const duplicateIdentity = useCallback((identityId) => {
+    const source = identitiesRef.current.find((item) => item.id === identityId)
+    if (!source) return null
+    const names = new Set(identitiesRef.current.map((item) => item.name.trim().toLowerCase()))
+    let name = `${source.name} (cópia)`
+    for (let n = 2; names.has(name.toLowerCase()); n += 1) name = `${source.name} (cópia ${n})`
+    const copy = structuredClone(source)
+    copy.id = newId()
+    copy.name = name
+    copy.createdAt = new Date().toISOString()
+    for (const key of FOLDER_KEYS) {
+      for (const item of copy[key]) {
+        item.id = newId()
+        if (Array.isArray(item.monoVersions)) item.monoVersions.forEach((version) => (version.id = newId()))
+      }
+    }
+    setState((s) => ({ ...s, identities: [...s.identities, copy] }))
+    saveIdentity(copy).catch((error) => {
+      console.error('Could not save the copy', error)
+      setState((s) => ({ ...s, identities: s.identities.filter((item) => item.id !== copy.id) }))
+    })
+    return copy
+  }, [])
+
+  // Deletes an identity and all its files. Rejects if the change could not be persisted.
+  const deleteIdentity = useCallback(async (identityId) => {
+    await deleteIdentityRecord(identityId)
+    setState((s) => ({ ...s, identities: s.identities.filter((item) => item.id !== identityId) }))
+  }, [])
+
   const value = useMemo(
     () => ({
       identities: state.identities,
       loading: state.loading,
+      duplicateIdentity,
+      deleteIdentity,
       createIdentity,
       addLogo,
       addItems,
       updateLogo,
       deleteLogos,
     }),
-    [state, createIdentity, addLogo, addItems, updateLogo, deleteLogos],
+    [state, createIdentity, duplicateIdentity, deleteIdentity, addLogo, addItems, updateLogo, deleteLogos],
   )
 
   return <IdentitiesContext.Provider value={value}>{children}</IdentitiesContext.Provider>

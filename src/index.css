@@ -328,17 +328,41 @@ button {
 
 .identity-card {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 40px;
   width: 268px;
-  padding-bottom: 16px;
   border: 1px solid var(--border-default);
   border-radius: 16px;
   background: var(--surface-white);
+}
+
+/* The link holds the content and clips the cover to the rounded corners; the kebab and its
+   menu sit outside it, so the menu is not clipped and a click on the kebab never opens
+   the identity. */
+.identity-card__link {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  padding-bottom: 16px;
+  border-radius: 15px;
   overflow: hidden;
   color: inherit;
   text-decoration: none;
+}
+
+.identity-card__kebab {
+  position: absolute;
+  top: 13px;
+  right: 13px;
+  z-index: 2;
+  width: 24px;
+  height: 24px;
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+
+.identity-card:hover .identity-card__kebab,
+.identity-card--menu-open .identity-card__kebab,
+.identity-card__kebab:focus-within {
+  opacity: 1;
 }
 
 .identity-card__cover {
