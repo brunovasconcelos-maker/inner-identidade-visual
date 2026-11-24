@@ -5,10 +5,12 @@ import UsageRightsSelect from './UsageRightsSelect.jsx'
 import VersionThumb from './VersionThumb.jsx'
 import { newId } from '../../data/identities.jsx'
 import { findLogoType } from '../../data/logoTypes.js'
+import { ASSET_KINDS } from '../../data/assetKinds.js'
 import { BUILTIN_RIGHTS, addCustomRight, toggleUsageRight } from '../../data/usageRights.js'
 import { saveBlob } from '../../utils/download.js'
 import { pickImage } from '../../utils/files.js'
 
+// Images show their pixel size; other files have none.
 function dimensions(logo) {
   return logo.width && logo.height ? `${logo.width}×${logo.height}px` : 'Não disponível'
 }
@@ -17,6 +19,7 @@ function dimensions(logo) {
 // lives in the viewer, so it can guard navigation and closing.
 export default function LogoDetailsPanel({
   logo,
+  kind = ASSET_KINDS.logo,
   draft,
   setDraft,
   dirty,
@@ -65,8 +68,25 @@ export default function LogoDetailsPanel({
   }
 
   return (
-    <aside className="viewer-panel" aria-label="Detalhes da logo">
+    <aside className="viewer-panel" aria-label={kind.hasName ? 'Detalhes do elemento' : 'Detalhes da logo'}>
       <div className="viewer-panel__content">
+        {kind.hasName ? (
+          <section className="vp-section">
+            <label className="panel-field__label" htmlFor="viewer-name">
+              Nome
+            </label>
+            <input
+              id="viewer-name"
+              className="input"
+              type="text"
+              value={draft.name}
+              placeholder="Nome do elemento"
+              autoComplete="off"
+              onChange={(event) => patch({ name: event.target.value })}
+            />
+          </section>
+        ) : null}
+
         {type ? (
           <section className="vp-section">
             <p className="panel-field__label">Tipo de logo</p>
@@ -79,10 +99,12 @@ export default function LogoDetailsPanel({
             <p className="panel-field__label">Formato</p>
             <span className="info-chip">{logo.format}</span>
           </section>
-          <section className="vp-section vp-section--grow">
-            <p className="panel-field__label">Dimensões</p>
-            <span className="info-chip">{dimensions(logo)}</span>
-          </section>
+          {!kind.hasName || (logo.width && logo.height) ? (
+            <section className="vp-section vp-section--grow">
+              <p className="panel-field__label">Dimensões</p>
+              <span className="info-chip">{dimensions(logo)}</span>
+            </section>
+          ) : null}
         </div>
 
         <section className="vp-section">
@@ -111,6 +133,8 @@ export default function LogoDetailsPanel({
           />
         </section>
 
+        {kind.hasMono ? (
+          <>
         <div className="vp-divider" />
 
         <section className="vp-section">
@@ -179,6 +203,8 @@ export default function LogoDetailsPanel({
             {colorError ? <p className="panel-error">{colorError}</p> : null}
           </div>
         </section>
+          </>
+        ) : null}
 
         <div className="vp-divider" />
 

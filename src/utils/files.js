@@ -115,3 +115,47 @@ export async function pickImage(onError) {
   onError(null)
   return { file, previewBg: await previewBgFor(file) }
 }
+
+// ---------- Elementos: any file type, one at a time, up to 50 MB ----------
+export const MAX_ELEMENT_SIZE = 50 * 1024 * 1024 // 50 MB
+
+const PREVIEW_IMAGE_FORMATS = ['SVG', 'PNG', 'JPG', 'WEBP', 'GIF']
+
+// Upper case format of any file: its extension (JPEG counts as JPG), otherwise the MIME
+// subtype, otherwise "ARQUIVO".
+export function elementFormat(file) {
+  const dot = file.name.lastIndexOf('.')
+  const extension = dot > 0 ? file.name.slice(dot + 1).trim().toUpperCase() : ''
+  if (extension) return extension === 'JPEG' ? 'JPG' : extension
+  const subtype = file.type ? file.type.split('/')[1] : ''
+  if (subtype) {
+    const clean = subtype.split('+')[0].toUpperCase()
+    return clean === 'JPEG' ? 'JPG' : clean
+  }
+  return 'ARQUIVO'
+}
+
+// True for the formats the browser can show as an image (SVG, PNG, JPG, WEBP, GIF).
+export function isImageFormat(format) {
+  return PREVIEW_IMAGE_FORMATS.includes(String(format).toUpperCase())
+}
+
+export function validateElementFile(file) {
+  if (file.size > MAX_ELEMENT_SIZE) return { ok: false, error: 'Arquivo maior que 50 MB' }
+  return { ok: true, format: elementFormat(file) }
+}
+
+const ZIP_FORMATS = ['ZIP', 'RAR', '7Z', 'TAR', 'GZ', 'TGZ', 'BZ2']
+const VIDEO_FORMATS = ['MP4', 'MOV', 'AVI', 'MKV', 'WEBM', 'M4V', 'WMV', 'FLV']
+const AUDIO_FORMATS = ['MP3', 'WAV', 'OGG', 'M4A', 'AAC', 'FLAC', 'AIFF']
+
+// Which Phosphor icon stands for a non-image file: FilePdf, FileZip, FileVideo, FileAudio
+// or File.
+export function fileIconKind(format) {
+  const upper = String(format).toUpperCase()
+  if (upper === 'PDF') return 'pdf'
+  if (ZIP_FORMATS.includes(upper)) return 'zip'
+  if (VIDEO_FORMATS.includes(upper)) return 'video'
+  if (AUDIO_FORMATS.includes(upper)) return 'audio'
+  return 'file'
+}

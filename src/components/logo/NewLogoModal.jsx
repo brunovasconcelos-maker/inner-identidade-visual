@@ -10,11 +10,19 @@ import { findLogoType, firstFreeLogoType, usedLogoTypes } from '../../data/logoT
 import { ASSET_KINDS } from '../../data/assetKinds.js'
 import { defaultUsageRights } from '../../data/usageRights.js'
 import { useObjectUrl } from '../../hooks/useObjectUrl.js'
+import AssetPreview from './AssetPreview.jsx'
 
-function initialDraft(identity, format, kind) {
+// File name without its extension.
+function stripExtension(fileName) {
+  const dot = fileName.lastIndexOf('.')
+  return dot > 0 ? fileName.slice(0, dot) : fileName
+}
+
+function initialDraft(identity, format, kind, file) {
   const type = kind.hasType ? firstFreeLogoType(identity.logos) : null
   return {
     type: type ? type.id : null,
+    name: kind.hasName ? stripExtension(file.name) : '',
     description: '',
     useCases: '',
     tags: kind.autoTags(format, type),
@@ -29,6 +37,7 @@ function initialDraft(identity, format, kind) {
 function snapshot(draft) {
   return JSON.stringify([
     draft.type,
+    draft.name,
     draft.description,
     draft.useCases,
     draft.tags,
@@ -41,7 +50,7 @@ function snapshot(draft) {
 
 export default function NewLogoModal({ identity, upload, kind = ASSET_KINDS.logo, onClose, onSave }) {
   const { file, format, width, height } = upload
-  const [draft, setDraft] = useState(() => initialDraft(identity, format, kind))
+  const [draft, setDraft] = useState(() => initialDraft(identity, format, kind, file))
   const [panel, setPanel] = useState(null) // 'type' | 'advanced' | 'mono' | null
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -49,7 +58,7 @@ export default function NewLogoModal({ identity, upload, kind = ASSET_KINDS.logo
   const initialSnapshot = useRef(null)
   if (initialSnapshot.current === null) initialSnapshot.current = snapshot(draft)
 
-  const previewUrl = useObjectUrl(file)
+  const previewUrl = useObjectUrl(kind.anyFile ? null : file)
   const usedTypes = useMemo(() => usedLogoTypes(identity.logos), [identity.logos])
   const type = kind.hasType ? findLogoType(draft.type) : null
   const dirty = snapshot(draft) !== initialSnapshot.current
@@ -104,6 +113,7 @@ export default function NewLogoModal({ identity, upload, kind = ASSET_KINDS.logo
     setSaveError(null)
     const logo = {
       id: newId(),
+      ...(kind.hasName ? { name: draft.name.trim() || file.name } : {}),
       ...(kind.hasType ? { type: draft.type } : {}),
       file,
       fileName: file.name,
@@ -115,7 +125,7 @@ export default function NewLogoModal({ identity, upload, kind = ASSET_KINDS.logo
       useCases: draft.useCases.trim(),
       tags: draft.tags,
       usageRights: draft.usageRights,
-      monoVersions: draft.monoVersions,
+      ...(kind.hasMono ? { monoVersions: draft.monoVersions } : {}),
     }
     const known = new Set(identity.customUsageRights.map((right) => right.toLowerCase()))
     const createdRights = draft.customRights.filter((right) => !known.has(right.toLowerCase()))
@@ -124,7 +134,7 @@ export default function NewLogoModal({ identity, upload, kind = ASSET_KINDS.logo
       onClose()
     } catch (error) {
       console.error('Could not save the logo', error)
-      setSaveError('Não foi possível salvar a logo')
+      setSaveError(kind.hasName ? 'Não foi possível salvar o elemento' : 'Não foi possível salvar a logo')
       setSaving(false)
     }
   }
@@ -157,7 +167,15 @@ export default function NewLogoModal({ identity, upload, kind = ASSET_KINDS.logo
           <div className="logo-form">
             <div className="logo-preview">
               <div className="logo-preview__box">
-                {previewUrl ? <img className="logo-preview__img" src={previewUrl} alt="" /> : null}
+                {kind.anyFile ? (
+                  <AssetPreview
+                    file={file}
+                    format={format}
+                    className="logo-preview__img logo-preview__img--element"
+                  />
+                ) : previewUrl ? (
+                  <img className="logo-preview__img" src={previewUrl} alt="" />
+                ) : null}
               </div>
             </div>
 
@@ -183,17 +201,19 @@ export default function NewLogoModal({ identity, upload, kind = ASSET_KINDS.logo
               </button>
             </div>
 
-            {draft.monoVersions.length > 0 ? (
+            {kind.hasMono && draft.monoVersions.length > 0 ? (
               <MonoSummary versions={draft.monoVersions} onEdit={() => setPanel('mono')} />
             ) : null}
 
-            <button
-              type="button"
-              className="btn btn--outline btn--outline-strong"
-              onClick={() => setPanel('mono')}
-            >
-              <span className="btn__label">Adicionar versões monocromáticas</span>
-            </button>
+            {kind.hasMono ? (
+              <button
+                type="button"
+                className="btn btn--outline btn--outline-strong"
+                onClick={() => setPanel('mono')}
+              >
+                <span className="btn__label">Adicionar versões monocromáticas</span>
+              </button>
+            ) : null}
           </div>
 
           <div className="logo-footer">
@@ -237,6 +257,7 @@ export default function NewLogoModal({ identity, upload, kind = ASSET_KINDS.logo
       {panel === 'advanced' ? (
         <AdvancedPanel
           initial={draft}
+          withName={kind.hasName}
           customRights={draft.customRights}
           onSave={saveAdvanced}
           onCancel={() => setPanel(null)}

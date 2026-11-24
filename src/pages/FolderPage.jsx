@@ -23,14 +23,21 @@ import { CATEGORIES, sortColors } from '../data/palette.js'
 import { findFontType, sortFonts } from '../data/typography.js'
 import { googleFamilyPage } from '../data/googleFonts.js'
 import { normalize } from '../utils/format.js'
-import { openFilePicker, readImageSize, validateImageFile } from '../utils/files.js'
+import {
+  isImageFormat,
+  openFilePicker,
+  readImageSize,
+  validateElementFile,
+  validateImageFile,
+} from '../utils/files.js'
 import { downloadFonts, downloadLogos } from '../utils/download.js'
 import { FONT_ACCEPT, readFontUpload, validateFontFile } from '../utils/fontFiles.js'
 
 // The search filters logo cards by type name and tags (case and accent insensitive).
-function logoMatches(logo, label, term) {
+function logoMatches(logo, label, term, searchFormat) {
   return (
     normalize(label).includes(term) ||
+    (searchFormat && normalize(logo.format).includes(term)) ||
     logo.tags.some((tag) => normalize(tag).includes(term))
   )
 }
@@ -63,12 +70,13 @@ export default function FolderPage() {
   const items = identity && folder ? identity[folder.key] : []
   const logos = useMemo(() => {
     if (!kind || !identity) return []
+    if (kind.newestFirst) return [...identity[kind.key]].reverse()
     return kind.hasType ? sortLogos(identity[kind.key]) : identity[kind.key]
   }, [kind, identity])
   const visibleLogos = useMemo(() => {
     const term = normalize(query.trim())
     if (!term) return logos
-    return logos.filter((logo) => logoMatches(logo, kind.label(logo), term))
+    return logos.filter((logo) => logoMatches(logo, kind.label(logo), term, kind.anyFile))
   }, [logos, kind, query])
   // Colors of the palette folder: brand, primary, secondary. The search looks at the name,
   // the hex and the category label.
@@ -160,14 +168,15 @@ export default function FolderPage() {
   // invalid one shows a short message near the card and the modal stays closed.
   async function handleUpload() {
     setUploadError(null)
-    const file = await openFilePicker()
+    // Elementos accept any file type (up to 50 MB); the other folders only images.
+    const file = await openFilePicker(kind.anyFile ? '' : undefined)
     if (!file) return
-    const result = validateImageFile(file)
+    const result = kind.anyFile ? validateElementFile(file) : validateImageFile(file)
     if (!result.ok) {
       setUploadError(result.error)
       return
     }
-    const size = await readImageSize(file)
+    const size = !kind.anyFile || isImageFormat(result.format) ? await readImageSize(file) : {}
     setUpload({ file, format: result.format, ...size })
   }
 
@@ -406,6 +415,7 @@ export default function FolderPage() {
                 logo={logo}
                 label={kind.label(logo)}
                 icon={!kind.hasType}
+                element={Boolean(kind.anyFile)}
                 selected={selectedIds.includes(logo.id)}
                 selecting={selectedIds.length > 0}
                 menuOpen={menuLogoId === logo.id}

@@ -33,15 +33,22 @@ async function bytesOf(blob) {
 //   principal/logo.svg
 //   principal/monocromaticas/Preto.svg
 export async function downloadLogos(identityName, logos, kind = ASSET_KINDS.logo) {
-  if (logos.length === 1 && logos[0].monoVersions.length === 0) {
+  if (logos.length === 1 && (logos[0].monoVersions || []).length === 0) {
     saveBlob(logos[0].file, logos[0].fileName)
     return
   }
   const files = {}
   for (const logo of logos) {
     const folder = kind.zipFolder(logo)
-    files[`${folder}/${safeName(logo.fileName)}`] = await bytesOf(logo.file)
-    for (const version of logo.monoVersions) {
+    const prefix = folder ? `${folder}/` : ''
+    const base = safeName(logo.fileName)
+    let main = `${prefix}${base}`
+    // Same file name twice (flat zips): "name-2.ext".
+    const ext = extensionOf(base)
+    const stem = ext ? base.slice(0, -ext.length) : base
+    for (let n = 2; files[main]; n += 1) main = `${prefix}${stem}-${n}${ext}`
+    files[main] = await bytesOf(logo.file)
+    for (const version of logo.monoVersions || []) {
       const base = `${folder}/monocromaticas/${safeName(version.name)}`
       const extension = extensionOf(version.fileName)
       let path = `${base}${extension}`

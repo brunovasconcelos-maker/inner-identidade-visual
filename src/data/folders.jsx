@@ -85,7 +85,7 @@ export const FOLDERS = [
     slug: 'elementos',
     key: 'elementos',
     title: 'Elementos',
-    cards: [upload('Adicione elementos que você já tem')],
+    cards: [upload('Faça upload de um elemento', { action: 'upload-asset' })],
   },
   {
     slug: 'biblioteca-de-icones',

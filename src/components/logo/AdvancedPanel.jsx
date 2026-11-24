@@ -4,7 +4,14 @@ import TagsEditor from './TagsEditor.jsx'
 import UsageRightsSelect from './UsageRightsSelect.jsx'
 import { BUILTIN_RIGHTS, toggleUsageRight } from '../../data/usageRights.js'
 
-export default function AdvancedPanel({ initial, customRights: initialCustomRights, onSave, onCancel }) {
+export default function AdvancedPanel({
+  initial,
+  customRights: initialCustomRights,
+  withName = false,
+  onSave,
+  onCancel,
+}) {
+  const [name, setName] = useState(initial.name || '')
   const [description, setDescription] = useState(initial.description)
   const [useCases, setUseCases] = useState(initial.useCases)
   const [tags, setTags] = useState(initial.tags)
@@ -28,9 +35,32 @@ export default function AdvancedPanel({ initial, customRights: initialCustomRigh
     <SidePanel
       title="Opções avançadas"
       onCancel={onCancel}
-      onSave={() => onSave({ description, useCases, tags, usageRights, customRights })}
+      onSave={() => onSave({
+          ...(withName ? { name } : {}),
+          description,
+          useCases,
+          tags,
+          usageRights,
+          customRights,
+        })}
     >
       <div className="panel-fields">
+        {withName ? (
+          <div className="panel-field">
+            <label className="panel-field__label" htmlFor="logo-name">
+              Nome
+            </label>
+            <input
+              id="logo-name"
+              className="input"
+              type="text"
+              value={name}
+              placeholder="Nome do elemento"
+              autoComplete="off"
+              onChange={(event) => setName(event.target.value)}
+            />
+          </div>
+        ) : null}
         <div className="panel-field">
           <label className="panel-field__label" htmlFor="logo-description">
             Descrição

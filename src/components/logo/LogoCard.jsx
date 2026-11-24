@@ -8,6 +8,7 @@ import {
   Square,
   Trash,
 } from '@phosphor-icons/react'
+import AssetPreview from './AssetPreview.jsx'
 import LogoThumb from './LogoThumb.jsx'
 import { useObjectUrl } from '../../hooks/useObjectUrl.js'
 import { formatDate } from '../../utils/format.js'
@@ -29,6 +30,7 @@ export default function LogoCard({
   logo,
   label,
   icon = false,
+  element = false,
   selected,
   selecting,
   menuOpen,
@@ -39,9 +41,10 @@ export default function LogoCard({
   onAction,
   onOpen,
 }) {
-  const url = useObjectUrl(logo.file)
+  const url = useObjectUrl(element ? null : logo.file)
   const kebabRef = useRef(null)
-  const { shown, rest } = thumbSlots(logo.monoVersions)
+  const monoVersions = logo.monoVersions || []
+  const { shown, rest } = thumbSlots(monoVersions)
 
   useEffect(() => {
     if (!menuOpen) return undefined
@@ -88,7 +91,16 @@ export default function LogoCard({
             }
           }}
         >
-          {url ? <img className="logo-card__img" src={url} alt={label} /> : null}
+          {element ? (
+            <AssetPreview
+              file={logo.file}
+              format={logo.format}
+              className="logo-card__img logo-card__img--element"
+              alt={label}
+            />
+          ) : url ? (
+            <img className="logo-card__img" src={url} alt={label} />
+          ) : null}
           <button
             type="button"
             className="logo-card__check"
@@ -137,7 +149,7 @@ export default function LogoCard({
           </div>
         </div>
 
-        {logo.monoVersions.length > 0 ? (
+        {monoVersions.length > 0 ? (
           <div className="logo-card__thumbs">
             {shown.map((version) => (
               <LogoThumb key={version.id} file={version.file} bg={version.previewBg} icon={icon} />
@@ -149,7 +161,7 @@ export default function LogoCard({
 
       <div className="logo-card__texts">
         <p className="logo-card__name">{label}</p>
-        <p className="logo-card__date">{formatDate(logo.createdAt)}</p>
+        <p className="logo-card__date">{element ? logo.format.toUpperCase() : formatDate(logo.createdAt)}</p>
       </div>
     </div>
   )

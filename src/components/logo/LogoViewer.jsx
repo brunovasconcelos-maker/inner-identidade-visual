@@ -3,16 +3,18 @@ import { CaretLeft, CaretRight, DownloadSimple, Share, Trash, X } from '@phospho
 import ConfirmDialog from '../ConfirmDialog.jsx'
 import LogoDetailsPanel from './LogoDetailsPanel.jsx'
 import { ASSET_KINDS } from '../../data/assetKinds.js'
+import AssetPreview from './AssetPreview.jsx'
 import { useObjectUrl } from '../../hooks/useObjectUrl.js'
 import { saveBlob } from '../../utils/download.js'
 
 function initialDraft(logo, identity) {
   return {
+    name: logo.name || '',
     description: logo.description || '',
     useCases: logo.useCases || '',
     tags: logo.tags,
     usageRights: logo.usageRights,
-    monoVersions: logo.monoVersions,
+    monoVersions: logo.monoVersions || [],
     customRights: identity.customUsageRights,
   }
 }
@@ -23,13 +25,14 @@ function sameList(a, b) {
 
 function isDirty(draft, logo) {
   return (
+    draft.name !== (logo.name || '') ||
     draft.description !== (logo.description || '') ||
     draft.useCases !== (logo.useCases || '') ||
     !sameList(draft.tags, logo.tags) ||
     !sameList(draft.usageRights, logo.usageRights) ||
     !sameList(
       draft.monoVersions.map((version) => version.id),
-      logo.monoVersions.map((version) => version.id),
+      (logo.monoVersions || []).map((version) => version.id),
     )
   )
 }
@@ -51,8 +54,8 @@ function VersionTab({ file, bg, label, active, icon, onSelect }) {
   )
 }
 
-function Neighbor({ logo, label, side, onOpen }) {
-  const url = useObjectUrl(logo.file)
+function Neighbor({ logo, label, side, element, onOpen }) {
+  const url = useObjectUrl(element ? null : logo.file)
   return (
     <button
       type="button"
@@ -60,7 +63,11 @@ function Neighbor({ logo, label, side, onOpen }) {
       aria-label={label}
       onClick={onOpen}
     >
-      {url ? <img className="viewer__neighbor-img" src={url} alt="" /> : null}
+      {element ? (
+        <AssetPreview file={logo.file} format={logo.format} size={48} className="viewer__neighbor-img" />
+      ) : url ? (
+        <img className="viewer__neighbor-img" src={url} alt="" />
+      ) : null}
     </button>
   )
 }
@@ -88,10 +95,11 @@ export default function LogoViewer({
   // It belongs to one logo, so moving to another logo shows its original again.
   const [featuredState, setFeaturedState] = useState({ logoId: null, versionId: null })
   const featuredId = logo && featuredState.logoId === logo.id ? featuredState.versionId : null
-  const featuredVersion = logo ? logo.monoVersions.find((version) => version.id === featuredId) || null : null
+  const monoVersions = logo ? logo.monoVersions || [] : []
+  const featuredVersion = logo ? monoVersions.find((version) => version.id === featuredId) || null : null
   const featuredFile = logo ? (featuredVersion ? featuredVersion.file : logo.file) : null
   const featuredName = logo ? (featuredVersion ? featuredVersion.fileName : logo.fileName) : ''
-  const url = useObjectUrl(featuredFile)
+  const url = useObjectUrl(kind.anyFile ? null : featuredFile)
 
   const [draftState, setDraftState] = useState(null) // { logoId, values }
   const [pending, setPending] = useState(null) // action waiting for the discard dialog
@@ -136,11 +144,12 @@ export default function LogoViewer({
       await onUpdate(
         logo.id,
         {
+          ...(kind.hasName ? { name: draft.name.trim() || logo.fileName } : {}),
           description: draft.description,
           useCases: draft.useCases,
           tags: draft.tags,
           usageRights: draft.usageRights,
-          monoVersions: draft.monoVersions,
+          ...(kind.hasMono ? { monoVersions: draft.monoVersions } : {}),
         },
         created,
       )
@@ -204,7 +213,18 @@ export default function LogoViewer({
       </button>
 
       <div className="viewer__card">
-        {url ? <img className="viewer__img" src={url} alt={label} /> : null}
+        {kind.anyFile ? (
+          <AssetPreview
+            file={logo.file}
+            format={logo.format}
+            size={200}
+            className="viewer__img"
+            iconClassName="viewer__file-icon"
+            alt={label}
+          />
+        ) : url ? (
+          <img className="viewer__img" src={url} alt={label} />
+        ) : null}
       </div>
 
       <div className="viewer__actions">
@@ -222,7 +242,7 @@ export default function LogoViewer({
         </button>
       </div>
 
-      {logo.monoVersions.length > 0 ? (
+      {monoVersions.length > 0 ? (
         <div className="viewer__thumbs">
           <VersionTab
             file={logo.file}
@@ -232,7 +252,7 @@ export default function LogoViewer({
             active={!featuredVersion}
             onSelect={() => setFeaturedState({ logoId: logo.id, versionId: null })}
           />
-          {logo.monoVersions.map((version) => (
+          {monoVersions.map((version) => (
             <VersionTab
               key={version.id}
               file={version.file}
@@ -251,12 +271,12 @@ export default function LogoViewer({
           <button
             type="button"
             className="viewer__round viewer__arrow viewer__arrow--prev"
-            aria-label="Logo anterior"
+            aria-label={kind.hasName ? 'Elemento anterior' : 'Logo anterior'}
             onClick={() => request({ type: 'nav', id: prev.id })}
           >
             <CaretLeft size={24} color="#5d5d5d" weight="regular" />
           </button>
-          <Neighbor logo={prev} label={kind.label(prev)} side="prev" onOpen={() => request({ type: 'nav', id: prev.id })} />
+          <Neighbor logo={prev} label={kind.label(prev)} side="prev" element={kind.anyFile} onOpen={() => request({ type: 'nav', id: prev.id })} />
         </>
       ) : null}
       {next ? (
@@ -264,18 +284,19 @@ export default function LogoViewer({
           <button
             type="button"
             className="viewer__round viewer__arrow viewer__arrow--next"
-            aria-label="Próxima logo"
+            aria-label={kind.hasName ? 'Próximo elemento' : 'Próxima logo'}
             onClick={() => request({ type: 'nav', id: next.id })}
           >
             <CaretRight size={24} color="#5d5d5d" weight="regular" />
           </button>
-          <Neighbor logo={next} label={kind.label(next)} side="next" onOpen={() => request({ type: 'nav', id: next.id })} />
+          <Neighbor logo={next} label={kind.label(next)} side="next" element={kind.anyFile} onOpen={() => request({ type: 'nav', id: next.id })} />
         </>
       ) : null}
 
       <LogoDetailsPanel
         key={logo.id}
         logo={logo}
+        kind={kind}
         draft={draft}
         setDraft={setDraft}
         dirty={dirty}
