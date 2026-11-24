@@ -55,6 +55,7 @@ export const FOLDERS = [
         id: 'from-logo',
         icon: <Sparkle {...ICON} />,
         label: 'Gerar a partir\nda logo',
+        action: 'generate-palette',
         // Disabled while the identity has no logo.
         isEnabled: (identity) => identity.logos.length > 0,
       },

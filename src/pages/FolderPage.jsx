@@ -14,13 +14,17 @@ import FontCard from '../components/typography/FontCard.jsx'
 import NewFontModal from '../components/typography/NewFontModal.jsx'
 import ColorViewer from '../components/palette/ColorViewer.jsx'
 import NewPaletteModal from '../components/palette/NewPaletteModal.jsx'
+import GeneratePaletteModal from '../components/palette/GeneratePaletteModal.jsx'
+import GeneratingCard from '../components/palette/GeneratingCard.jsx'
+import { newId } from '../data/identities.jsx'
+import { generatePaletteColors } from '../data/colorGeneration.js'
 import NewLogoModal from '../components/logo/NewLogoModal.jsx'
 import SelectionBar from '../components/logo/SelectionBar.jsx'
 import { useIdentities } from '../data/identities.jsx'
 import { findFolder } from '../data/folders.jsx'
 import { kindForSection } from '../data/assetKinds.js'
 import { sortLogos } from '../data/logoTypes.js'
-import { CATEGORIES, sortColors } from '../data/palette.js'
+import { CATEGORIES, CATEGORY_ORDER, generateTones, sortColors } from '../data/palette.js'
 import { findFontType, sortFonts } from '../data/typography.js'
 import { googleFamilyPage } from '../data/googleFonts.js'
 import { normalize } from '../utils/format.js'
@@ -61,6 +65,8 @@ export default function FolderPage() {
   const [deleteError, setDeleteError] = useState(null)
   const [viewerId, setViewerId] = useState(null) // logo open in the viewer
   const [paletteOpen, setPaletteOpen] = useState(false) // "Nova paleta" modal
+  const [generateOpen, setGenerateOpen] = useState(false) // "Gerar paleta" modal
+  const [pending, setPending] = useState([]) // colors being generated: [{ id, category }]
   const [fontModal, setFontModal] = useState(null) // "Nova tipografia": { mode, font }
   const shareTimer = useRef(null)
 
@@ -142,12 +148,12 @@ export default function FolderPage() {
         }
         return
       }
-      if (upload || searchOpen || viewerId || paletteOpen || fontModal) return
+      if (upload || searchOpen || viewerId || paletteOpen || generateOpen || fontModal) return
       if (selectedIds.length > 0) setSelectedIds([])
     }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
-  }, [deleteTarget, deleting, upload, searchOpen, selectedIds, viewerId, paletteOpen, fontModal])
+  }, [deleteTarget, deleting, upload, searchOpen, selectedIds, viewerId, paletteOpen, generateOpen, fontModal])
 
   useEffect(() => () => clearTimeout(shareTimer.current), [])
 
@@ -165,6 +171,18 @@ export default function FolderPage() {
 
   const total = items.length
 
+  // Colors of the grid with the placeholders of the colors being generated, in the order
+  // brand, primary, secondary. A placeholder gives way as soon as its color is saved.
+  const savedIds = new Set(identity.paleta.map((color) => color.id))
+  const rank = (category) => CATEGORY_ORDER.indexOf(category)
+  const gridColors = [
+    ...visibleColors.map((color) => ({ color })),
+    ...pending.filter((item) => !savedIds.has(item.id)).map((item) => ({ pending: item })),
+  ].sort(
+    (a, b) =>
+      rank(a.color ? a.color.category : a.pending.category) - rank(b.color ? b.color.category : b.pending.category),
+  )
+
   // Opens the native file picker. A valid file opens the "Nova logo" modal; an
   // invalid one shows a short message near the card and the modal stays closed.
   async function handleUpload() {
@@ -179,6 +197,57 @@ export default function FolderPage() {
     }
     const size = !kind.anyFile || isImageFormat(result.format) ? await readImageSize(file) : {}
     setUpload({ file, format: result.format, ...size })
+  }
+
+  // "Gerar paleta": "Criar" closes the modal and puts one placeholder per color in the grid.
+  // The colors are generated meanwhile; after 1.5 s the placeholders are filled one by one,
+  // 400 ms apart, each one saved to the "paleta" array with its tones.
+  async function handleGenerate({ files, counts }) {
+    const plan = []
+    for (const category of CATEGORY_ORDER) {
+      for (let n = 0; n < (counts[category] || 0); n += 1) plan.push({ id: newId(), category })
+    }
+    const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+    setUploadError(null)
+    setPending(plan)
+    try {
+      const brand = identity.paleta.find((color) => color.category === 'marca')
+      const [generated] = await Promise.all([
+        generatePaletteColors({
+          files,
+          counts,
+          existing: identity.paleta.map((color) => color.hex),
+          existingNames: identity.paleta.map((color) => color.name),
+          existingBrand: brand ? brand.hex : null,
+          identityName: identity.name,
+        }),
+        wait(1500),
+      ])
+      for (let i = 0; i < generated.length; i += 1) {
+        if (i > 0) await wait(400)
+        const color = generated[i]
+        await addItems(
+          identity.id,
+          [
+            {
+              id: plan[i].id,
+              category: color.category,
+              name: color.name,
+              hex: color.hex,
+              tones: generateTones(color.hex),
+              useCases: '',
+              createdAt: new Date().toISOString(),
+            },
+          ],
+          'paleta',
+        )
+      }
+    } catch (error) {
+      console.error('Could not generate the palette', error)
+      setUploadError('Não foi possível gerar a paleta')
+    } finally {
+      setPending([])
+    }
   }
 
   function toggleSelect(logoId) {
@@ -344,7 +413,7 @@ export default function FolderPage() {
               query={query}
               onQueryChange={setQuery}
               placeholder={`Buscar em ${folder.title}`}
-              escapeEnabled={!upload && !deleteTarget && !viewerId && !paletteOpen && !fontModal}
+              escapeEnabled={!upload && !deleteTarget && !viewerId && !paletteOpen && !generateOpen && !fontModal}
               triggerClassName="toolbar-icon-btn"
               iconSize={24}
             />
@@ -363,13 +432,18 @@ export default function FolderPage() {
                 key={card.id}
                 icon={card.icon}
                 label={card.label}
-                disabled={card.isEnabled ? !card.isEnabled(identity) : false}
+                disabled={
+                  (card.isEnabled ? !card.isEnabled(identity) : false) ||
+                  (card.action === 'generate-palette' && pending.length > 0)
+                }
                 disabledStyle={card.disabledStyle}
                 onClick={
                   card.action === 'upload-asset'
                     ? handleUpload
                     : card.action === 'create-palette'
                       ? () => setPaletteOpen(true)
+                      : card.action === 'generate-palette'
+                        ? () => setGenerateOpen(true)
                       : card.action === 'upload-font'
                         ? handleFontUpload
                         : card.action === 'google-font'
@@ -391,21 +465,25 @@ export default function FolderPage() {
                 onAction={handleFontAction}
               />
             ))}
-            {visibleColors.map((color) => (
+            {gridColors.map((entry) =>
+              entry.pending ? (
+                <GeneratingCard key={entry.pending.id} category={entry.pending.category} />
+              ) : (
               <ColorCard
-                key={color.id}
-                color={color}
-                selected={selectedIds.includes(color.id)}
+                key={entry.color.id}
+                color={entry.color}
+                selected={selectedIds.includes(entry.color.id)}
                 selecting={selectedIds.length > 0}
-                menuOpen={menuLogoId === color.id}
-                copiedTip={shareTip === `copy:${color.id}`}
+                menuOpen={menuLogoId === entry.color.id}
+                copiedTip={shareTip === `copy:${entry.color.id}`}
                 onToggleSelect={toggleSelect}
                 onOpenMenu={setMenuLogoId}
                 onCloseMenu={closeMenu}
                 onAction={handleColorAction}
                 onOpen={setViewerId}
               />
-            ))}
+              ),
+            )}
             {(isPalette || isTypo ? [] : visibleLogos).map((logo) => (
               <LogoCard
                 key={logo.id}
@@ -496,6 +574,14 @@ export default function FolderPage() {
           initialFont={fontModal.font}
           onClose={() => setFontModal(null)}
           onSave={(font, createdRights) => addLogo(identity.id, font, createdRights, 'tipografia')}
+        />
+      ) : null}
+
+      {generateOpen ? (
+        <GeneratePaletteModal
+          identity={identity}
+          onClose={() => setGenerateOpen(false)}
+          onCreate={handleGenerate}
         />
       ) : null}
 
