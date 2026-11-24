@@ -82,5 +82,5 @@ export const LOGO_SECTIONS = {
   },
   vertical: { title: 'Logo vertical', download: 'logo vertical', zip: 'logo-vertical', ...PRINCIPAL_AREAS },
   horizontal: { title: 'Logo horizontal', download: 'logo horizontal', zip: 'logo-horizontal', ...PRINCIPAL_AREAS },
-  tagline: { title: 'Logo com tagline', download: 'logo com tagline', zip: 'logo-com-tagline', ...PRINCIPAL_AREAS },
+  tagline: { title: 'Logo com tagline', download: 'logo com tagline', zip: 'logo-tagline', ...PRINCIPAL_AREAS },
 }

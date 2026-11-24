@@ -1,6 +1,6 @@
-// Default texts of the principal and secondary logos. They fill an empty description or
+// Default texts of every logo type. They fill an empty description or
 // empty use cases, so the brand manual always has something to show (and the user can edit
-// it afterwards). Other logo types have none.
+// it afterwards).
 export function defaultLogoTexts(brandName, type) {
   if (type === 'principal') {
     return {
@@ -16,10 +16,31 @@ export function defaultLogoTexts(brandName, type) {
         'Use quando a logo principal não se encaixar bem no espaço ou na proposta da peça. Aplique sempre a partir dos arquivos originais, sem alterações.',
     }
   }
+  if (type === 'vertical') {
+    return {
+      description: `Esta é a versão vertical da logo de ${brandName}, com os elementos organizados um sobre o outro. Ela ocupa menos largura e se adapta bem a espaços estreitos.`,
+      useCases:
+        'Use em formatos altos ou estreitos, como stories, posts verticais, banners laterais e embalagens altas. Aplique sempre a partir dos arquivos originais, sem alterações.',
+    }
+  }
+  if (type === 'horizontal') {
+    return {
+      description: `Esta é a versão horizontal da logo de ${brandName}, com os elementos organizados lado a lado. Ela ocupa menos altura e funciona bem em espaços largos.`,
+      useCases:
+        'Use em formatos largos e baixos, como cabeçalhos de site, assinaturas de e-mail, banners e rodapés. Aplique sempre a partir dos arquivos originais, sem alterações.',
+    }
+  }
+  if (type === 'tagline') {
+    return {
+      description: `Esta é a versão da logo de ${brandName} acompanhada da tagline. Ela une a identidade visual à mensagem principal da marca.`,
+      useCases:
+        'Use em peças institucionais e de divulgação onde a mensagem da marca precisa aparecer, como campanhas, apresentações e materiais impressos. Evite em tamanhos pequenos, onde a tagline perde a leitura.',
+    }
+  }
   return null
 }
 
-// Returns the logo with its empty fields filled (principal and secondary only), or the
+// Returns the logo with its empty fields filled (every logo type), or the
 // same object when nothing was missing.
 export function withDefaultLogoTexts(logo, brandName) {
   const defaults = defaultLogoTexts(brandName, logo.type)
