@@ -3039,7 +3039,17 @@ a.btn {
   text-overflow: ellipsis;
 }
 
+/* Sidebar motion, Material 3 tokens: emphasized easing for the shared indicator, decelerate
+   when sub options enter, accelerate when they leave. Durations: expand 400ms, collapse
+   250ms, selection 300ms. */
+.manual {
+  --m3-emphasized: cubic-bezier(0.2, 0, 0, 1);
+  --m3-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --m3-accelerate: cubic-bezier(0.3, 0, 0.8, 0.15);
+}
+
 .manual-nav {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -3049,23 +3059,46 @@ a.btn {
 }
 
 .manual-nav__group {
-  display: contents;
+  display: flex;
+  flex-direction: column;
 }
 
+/* The one tinted pill behind the selected item: it slides to the new item. */
+.manual-nav__indicator {
+  position: absolute;
+  top: 0;
+  left: 20px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--manual-select-bg);
+  transition: transform 300ms var(--m3-emphasized), background-color 300ms var(--m3-emphasized);
+}
+
+/* Rows keep the Figma alignment (tile at x = 20) with a little room for the hover fill. */
 .manual-nav__item {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 12px;
-  width: 100%;
-  padding: 0 20px;
+  width: calc(100% - 16px);
+  margin: 0 8px;
+  padding: 0 12px;
+  border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
   line-height: normal;
   color: #000000;
   text-decoration: none;
+  transition: background-color 150ms linear;
+}
+
+.manual-nav__item:not(.manual-nav__item--selected):not(.manual-nav__sub--selected):hover {
+  background: #f7f7f7;
 }
 
 .manual-nav__tile {
+  position: relative;
   display: flex;
   flex: none;
   align-items: center;
@@ -3076,16 +3109,63 @@ a.btn {
   border-radius: 8px;
 }
 
-.manual-nav__tile--selected {
-  background: var(--manual-select-bg);
+/* Icon color cross fades between unselected and selected. */
+.manual-nav__icon {
+  display: flex;
+  color: #96bfe9;
+  transition: color 300ms var(--m3-emphasized);
 }
 
-.manual-nav__tile--spacer {
-  opacity: 0;
+.manual-nav__item--selected .manual-nav__icon {
+  color: var(--manual-select-fg);
+}
+
+/* Sub options: the group height goes 0 <-> auto with a grid row, so the rows below follow. */
+.manual-nav__subs {
+  display: grid;
+  grid-template-rows: 0fr;
+  visibility: hidden;
+  transition: grid-template-rows 250ms var(--m3-accelerate), visibility 0s linear 250ms;
+}
+
+.manual-nav__subs--open {
+  grid-template-rows: 1fr;
+  visibility: visible;
+  transition: grid-template-rows 400ms var(--m3-decelerate), visibility 0s;
+}
+
+.manual-nav__subs-clip {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.manual-nav__subs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 8px;
 }
 
 .manual-nav__sub {
   color: #5d5d5d;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition:
+    opacity 150ms var(--m3-accelerate),
+    transform 150ms var(--m3-accelerate),
+    color 200ms linear,
+    background-color 150ms linear;
+}
+
+/* Each sub option fades in and slides down 4px, 30ms after the one before. */
+.manual-nav__subs--open .manual-nav__sub {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 300ms var(--m3-decelerate) calc(var(--i) * 30ms + 60ms),
+    transform 300ms var(--m3-decelerate) calc(var(--i) * 30ms + 60ms),
+    color 200ms linear,
+    background-color 150ms linear;
 }
 
 .manual-nav__sub--selected {
@@ -3094,6 +3174,35 @@ a.btn {
 
 .manual-nav__label {
   white-space: nowrap;
+}
+
+/* Reduced motion: no movement, only 100ms fades. */
+@media (prefers-reduced-motion: reduce) {
+  .manual-nav__indicator {
+    transition: none;
+    animation: manual-fade 100ms linear;
+  }
+
+  .manual-nav__subs,
+  .manual-nav__subs--open {
+    transition: visibility 0s;
+  }
+
+  .manual-nav__sub,
+  .manual-nav__subs--open .manual-nav__sub {
+    transform: none;
+    transition: opacity 100ms linear, color 100ms linear, background-color 100ms linear;
+  }
+
+  .manual-nav__icon {
+    transition: color 100ms linear;
+  }
+}
+
+@keyframes manual-fade {
+  from {
+    opacity: 0;
+  }
 }
 
 .manual-kebab {
