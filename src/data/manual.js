@@ -65,3 +65,22 @@ export function manualPath(identityId, slug, sub) {
 export function manualUrl(identityId) {
   return `${window.location.origin}${import.meta.env.BASE_URL}#/manual/${identityId}`
 }
+
+// Logo sections of the manual: title, download label, zip name and the size of the area
+// where the logo is drawn (Figma nodes 6479:5211 and 6488:7870). `hero` is the area in the
+// big preview, `box` the one in the variants and safe space boxes. Types without a Figma
+// frame use the principal sizes.
+const PRINCIPAL_AREAS = { hero: [324.153, 250.416], box: [255.008, 197] }
+export const LOGO_SECTIONS = {
+  principal: { title: 'Logo principal', download: 'logo principal', zip: 'logo-principal', ...PRINCIPAL_AREAS },
+  secundaria: {
+    title: 'Logo secundária',
+    download: 'logo secundária',
+    zip: 'logo-secundaria',
+    hero: [368.493, 334.575],
+    box: [237.897, 216],
+  },
+  vertical: { title: 'Logo vertical', download: 'logo vertical', zip: 'logo-vertical', ...PRINCIPAL_AREAS },
+  horizontal: { title: 'Logo horizontal', download: 'logo horizontal', zip: 'logo-horizontal', ...PRINCIPAL_AREAS },
+  tagline: { title: 'Logo com tagline', download: 'logo com tagline', zip: 'logo-com-tagline', ...PRINCIPAL_AREAS },
+}

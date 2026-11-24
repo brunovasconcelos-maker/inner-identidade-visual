@@ -1,7 +1,7 @@
 import { Navigate, useParams } from 'react-router-dom'
 import { DotsThreeVertical } from '@phosphor-icons/react'
 import ManualSidebar from '../components/manual/ManualSidebar.jsx'
-import ManualLogoPrincipal from '../components/manual/ManualLogoPrincipal.jsx'
+import ManualLogoPage from '../components/manual/ManualLogoPage.jsx'
 import { useIdentities } from '../data/identities.jsx'
 import { headerLogo as pickHeaderLogo, selectionColors } from '../data/manualTheme.js'
 import { MANUAL_SECTIONS, manualPath, subOptions, visibleSections } from '../data/manual.js'
@@ -27,7 +27,6 @@ export default function ManualPage() {
 
   const selection = selectionColors(identity)
   const meta = MANUAL_SECTIONS.find((item) => item.slug === section)
-  const principal = section === 'logo' && sub === 'principal' ? identity.logos.find((logo) => logo.type === 'principal') : null
 
   return (
     <div
@@ -53,7 +52,7 @@ export default function ManualPage() {
       </button>
       <main className="manual-main">
         <h1 className="manual-title">{meta.label}</h1>
-        {principal ? <ManualLogoPrincipal key={principal.id} identity={identity} logo={principal} /> : null}
+        {section === 'logo' ? <ManualLogoPage identity={identity} sub={sub} /> : null}
       </main>
     </div>
   )

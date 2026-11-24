@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { DownloadSimple } from '@phosphor-icons/react'
 import { useObjectUrl } from '../../hooks/useObjectUrl.js'
+import { LOGO_SECTIONS } from '../../data/manual.js'
 import { downloadLogoVersions, saveBlob } from '../../utils/download.js'
 import { dominantColor, lowContrastBackground } from '../../utils/imageColor.js'
 import SafeSpaceDiagram from './SafeSpaceDiagram.jsx'
@@ -66,8 +67,10 @@ const VARIANTS_TEXT =
 const MISUSE_INTRO =
   'Para manter a marca consistente e reconhecível, a logo não deve ser alterada. Os exemplos abaixo mostram os erros mais comuns. Na dúvida, use sempre os arquivos originais deste manual.'
 
-// Logo > Principal page of the manual (Figma node 6479:5211).
-export default function ManualLogoPrincipal({ identity, logo }) {
+// One logo type section of the manual (Figma nodes 6479:5211 and 6488:7870): hero, info,
+// variants, safe space and incorrect uses.
+export default function ManualLogoSection({ identity, logo }) {
+  const config = LOGO_SECTIONS[logo.type]
   const letter = (identity.name.trim()[0] || '').toUpperCase()
   const monoVersions = logo.monoVersions || []
   const [dominant, setDominant] = useState('#000000')
@@ -82,33 +85,33 @@ export default function ManualLogoPrincipal({ identity, logo }) {
   }, [logo.file])
   const noContrastBg = lowContrastBackground(dominant)
 
-  const HERO = [324.153, 250.416]
-  const VARIANT = [255.008, 197]
+  const HERO = config.hero
+  const VARIANT = config.box
 
   return (
-    <>
-      <OriginalBox file={logo.file} fileName={logo.fileName} height={520} inner={HERO} label="Logo principal" />
+    <section className="manual-logo-section" id={`logo-${logo.type}`}>
+      <OriginalBox file={logo.file} fileName={logo.fileName} height={520} inner={HERO} label={config.title} />
 
-      <section className="manual-block manual-block--info">
+      <div className="manual-block manual-block--info">
         <div className="manual-text-block manual-text-block--wide">
-          <h2 className="manual-h2">Logo principal</h2>
+          <h2 className="manual-h2">{config.title}</h2>
           {logo.description ? <p className="manual-p">{logo.description}</p> : null}
           <h3 className="manual-h3">Casos de uso</h3>
           {logo.useCases ? <p className="manual-p">{logo.useCases}</p> : null}
         </div>
         <div className="manual-actions">
           <button type="button" className="manual-btn manual-btn--primary" onClick={() => saveBlob(logo.file, logo.fileName)}>
-            Download logo principal
+            {`Download ${config.download}`}
           </button>
           <button
             type="button"
             className="manual-btn manual-btn--secondary"
-            onClick={() => downloadLogoVersions(identity.name, logo)}
+            onClick={() => downloadLogoVersions(identity.name, logo, config.zip)}
           >
             Download todas as versões
           </button>
         </div>
-      </section>
+      </div>
 
       {monoVersions.length > 0 ? (
         <>
@@ -160,7 +163,7 @@ export default function ManualLogoPrincipal({ identity, logo }) {
         </div>
         <div className="manual-box-wrap">
           <div className="manual-box manual-box--static" style={{ background: BOX_LIGHT, height: 360 }}>
-            <SafeSpaceDiagram file={logo.file} identity={identity} letter={letter} />
+            <SafeSpaceDiagram file={logo.file} identity={identity} letter={letter} area={VARIANT} />
           </div>
         </div>
       </section>
@@ -190,6 +193,6 @@ export default function ManualLogoPrincipal({ identity, logo }) {
           </Misuse>
         </div>
       </section>
-    </>
+    </section>
   )
 }

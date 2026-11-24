@@ -3,10 +3,8 @@ import { useObjectUrl } from '../../hooks/useObjectUrl.js'
 import { useFontPreview } from '../../utils/fonts.js'
 import { visibleBounds } from '../../utils/imageColor.js'
 
-// Box and logo area of the Figma frame (node 6483:7453): 580 x 360 box, logo drawn in a
-// 255.008 x 197 area at (162, 81).
+// Box of the Figma frames: 580 x 360.
 const BOX = { width: 580, height: 360 }
-const AREA = { x: 162, y: 81, width: 255.008, height: 197 }
 // Light blue of the manual in Figma (the selected sidebar tile, 96BFE9 at 93%).
 const GUIDE = 'rgba(150, 191, 233, 0.93)'
 // Safe space = reference letter height, as a proportion of the visible logo height. The
@@ -41,7 +39,14 @@ function useCapRatio(letter, font) {
 // The logo with its safe space: inner rectangle on the visible bounds, outer rectangle
 // expanded by `s` on all sides, the reference letter in each gap and a crossed square of
 // s x s in each corner. Drawn as SVG, so it scales with its box.
-export default function SafeSpaceDiagram({ file, identity, letter }) {
+export default function SafeSpaceDiagram({ file, identity, letter, area }) {
+  // The logo area is centered in the box (Figma: 255.008 x 197 for the principal logo).
+  const AREA = {
+    x: (BOX.width - area[0]) / 2,
+    y: (BOX.height - area[1]) / 2,
+    width: area[0],
+    height: area[1],
+  }
   const url = useObjectUrl(file)
   const [bounds, setBounds] = useState(null)
   useEffect(() => {

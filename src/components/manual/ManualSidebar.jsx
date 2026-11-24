@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { LOGO_GOTO_EVENT } from './ManualLogoPage.jsx'
 import { subOptions, manualPath, visibleSections } from '../../data/manual.js'
 import { selectionColors } from '../../data/manualTheme.js'
 
@@ -30,6 +31,15 @@ export default function ManualSidebar({ identity, slug, sub }) {
                 to={manualPath(identity.id, itemSlug, option.id)}
                 className={`manual-nav__item manual-nav__sub${sub === option.id ? ' manual-nav__sub--selected' : ''}`}
                 aria-current={sub === option.id ? 'page' : undefined}
+                onClick={
+                  itemSlug === 'logo'
+                    ? (event) => {
+                        // The Logo page is one scroll: go to the section, no page change.
+                        event.preventDefault()
+                        window.dispatchEvent(new CustomEvent(LOGO_GOTO_EVENT, { detail: option.id }))
+                      }
+                    : undefined
+                }
               >
                 <span className="manual-nav__tile manual-nav__tile--spacer" />
                 <span className="manual-nav__label">{option.label}</span>
