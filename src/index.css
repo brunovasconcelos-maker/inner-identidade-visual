@@ -3043,7 +3043,7 @@ a.btn {
 }
 
 .manual-nav__tile--selected {
-  background: rgba(150, 191, 233, 0.93);
+  background: var(--manual-select-bg);
 }
 
 .manual-nav__tile--spacer {
@@ -3055,7 +3055,7 @@ a.btn {
 }
 
 .manual-nav__sub--selected {
-  color: #053eae;
+  color: var(--manual-select-fg);
 }
 
 .manual-nav__label {

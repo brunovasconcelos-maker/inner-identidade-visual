@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom'
 import { subOptions, manualPath, visibleSections } from '../../data/manual.js'
+import { selectionColors } from '../../data/manualTheme.js'
 
 // Sidebar of the brand manual (Figma node 6479:5211). Icons are Phosphor, Fill weight.
 // The selected item gets the tinted tile; a selected sub option uses the blue text.
 export default function ManualSidebar({ identity, slug, sub }) {
+  const { foreground } = selectionColors(identity)
   return (
     <nav className="manual-nav" aria-label="Manual da marca">
       {visibleSections(identity).map(({ slug: itemSlug, label, Icon }) => {
@@ -18,7 +20,7 @@ export default function ManualSidebar({ identity, slug, sub }) {
               aria-current={selected && !sub ? 'page' : undefined}
             >
               <span className={`manual-nav__tile${selected ? ' manual-nav__tile--selected' : ''}`}>
-                <Icon size={18} color={selected ? '#053eae' : '#96bfe9'} weight="fill" />
+                <Icon size={18} color={selected ? foreground : '#96bfe9'} weight="fill" />
               </span>
               <span className="manual-nav__label">{label}</span>
             </Link>

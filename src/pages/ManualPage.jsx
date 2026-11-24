@@ -3,7 +3,7 @@ import { DotsThreeVertical } from '@phosphor-icons/react'
 import ManualSidebar from '../components/manual/ManualSidebar.jsx'
 import ManualLogoPrincipal from '../components/manual/ManualLogoPrincipal.jsx'
 import { useIdentities } from '../data/identities.jsx'
-import { sortLogos } from '../data/logoTypes.js'
+import { headerLogo as pickHeaderLogo, selectionColors } from '../data/manualTheme.js'
 import { MANUAL_SECTIONS, manualPath, subOptions, visibleSections } from '../data/manual.js'
 import { useObjectUrl } from '../hooks/useObjectUrl.js'
 
@@ -12,7 +12,7 @@ export default function ManualPage() {
   const { id, section = 'intro', sub } = useParams()
   const { identities, loading } = useIdentities()
   const identity = identities.find((item) => item.id === id)
-  const headerLogo = identity ? sortLogos(identity.logos)[0] : null
+  const headerLogo = identity ? pickHeaderLogo(identity) : null
   const headerUrl = useObjectUrl(headerLogo ? headerLogo.file : null)
 
   if (loading) return null
@@ -25,11 +25,18 @@ export default function ManualPage() {
     return <Navigate to={manualPath(identity.id, section, subs[0].id)} replace />
   }
 
+  const selection = selectionColors(identity)
   const meta = MANUAL_SECTIONS.find((item) => item.slug === section)
   const principal = section === 'logo' && sub === 'principal' ? identity.logos.find((logo) => logo.type === 'principal') : null
 
   return (
-    <div className="manual">
+    <div
+      className="manual"
+      style={{
+        '--manual-select-bg': selection.background,
+        '--manual-select-fg': selection.foreground,
+      }}
+    >
       <aside className="manual-side">
         <div className="manual-side__logo">
           {headerUrl ? (
