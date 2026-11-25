@@ -22,9 +22,10 @@ export const FONT_TYPES = [
 
 export const findFontType = (id) => FONT_TYPES.find((type) => type.id === id)
 export const usedFontTypes = (fonts) => new Set(fonts.map((font) => font.type))
-export const firstFreeFontType = (fonts) => {
+// True while at least one of the three types is still free in the identity.
+export const hasFreeFontType = (fonts) => {
   const used = usedFontTypes(fonts)
-  return FONT_TYPES.find((type) => !used.has(type.id)) || null
+  return FONT_TYPES.some((type) => !used.has(type.id))
 }
 
 // Fonts in the order of the types.

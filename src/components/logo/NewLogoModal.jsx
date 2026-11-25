@@ -6,7 +6,7 @@ import MonoPanel from './MonoPanel.jsx'
 import MonoSummary from './MonoSummary.jsx'
 import TypePanel from './TypePanel.jsx'
 import { newId } from '../../data/identities.jsx'
-import { findLogoType, firstFreeLogoType, usedLogoTypes } from '../../data/logoTypes.js'
+import { findLogoType, usedLogoTypes } from '../../data/logoTypes.js'
 import { ASSET_KINDS } from '../../data/assetKinds.js'
 import { defaultUsageRights } from '../../data/usageRights.js'
 import { useObjectUrl } from '../../hooks/useObjectUrl.js'
@@ -18,8 +18,9 @@ function stripExtension(fileName) {
   return dot > 0 ? fileName.slice(0, dot) : fileName
 }
 
-function initialDraft(identity, format, kind, file) {
-  const type = kind.hasType ? firstFreeLogoType(identity.logos) : null
+// The type always comes from the chooser (`upload.type`).
+function initialDraft(identity, format, kind, file, typeId) {
+  const type = kind.hasType ? findLogoType(typeId) : null
   return {
     type: type ? type.id : null,
     name: kind.hasName ? stripExtension(file.name) : '',
@@ -49,8 +50,8 @@ function snapshot(draft) {
 }
 
 export default function NewLogoModal({ identity, upload, kind = ASSET_KINDS.logo, onClose, onSave }) {
-  const { file, format, width, height } = upload
-  const [draft, setDraft] = useState(() => initialDraft(identity, format, kind, file))
+  const { file, format, width, height, type: chosenType } = upload
+  const [draft, setDraft] = useState(() => initialDraft(identity, format, kind, file, chosenType))
   const [panel, setPanel] = useState(null) // 'type' | 'advanced' | 'mono' | null
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [saving, setSaving] = useState(false)

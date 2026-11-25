@@ -11,6 +11,7 @@ import LogoViewer from '../components/logo/LogoViewer.jsx'
 import LogoCard from '../components/logo/LogoCard.jsx'
 import ColorCard from '../components/palette/ColorCard.jsx'
 import FontCard from '../components/typography/FontCard.jsx'
+import TypeChooserModal from '../components/TypeChooserModal.jsx'
 import NewFontModal from '../components/typography/NewFontModal.jsx'
 import ColorViewer from '../components/palette/ColorViewer.jsx'
 import NewPaletteModal from '../components/palette/NewPaletteModal.jsx'
@@ -24,9 +25,9 @@ import SelectionBar from '../components/logo/SelectionBar.jsx'
 import { useIdentities } from '../data/identities.jsx'
 import { findFolder } from '../data/folders.jsx'
 import { kindForSection } from '../data/assetKinds.js'
-import { sortLogos } from '../data/logoTypes.js'
+import { LOGO_TYPES, sortLogos, usedLogoTypes } from '../data/logoTypes.js'
 import { CATEGORIES, CATEGORY_ORDER, generateTones, sortColors } from '../data/palette.js'
-import { findFontType, sortFonts } from '../data/typography.js'
+import { FONT_TYPES, findFontType, sortFonts, usedFontTypes } from '../data/typography.js'
 import { googleFamilyPage } from '../data/googleFonts.js'
 import { normalize } from '../utils/format.js'
 import {
@@ -68,7 +69,8 @@ export default function FolderPage() {
   const [paletteOpen, setPaletteOpen] = useState(false) // "Nova paleta" modal
   const [generateOpen, setGenerateOpen] = useState(false) // "Gerar paleta" modal
   const [pending, setPending] = useState([]) // colors being generated: [{ id, category }]
-  const [fontModal, setFontModal] = useState(null) // "Nova tipografia": { mode, font }
+  const [fontModal, setFontModal] = useState(null) // "Nova tipografia": { mode, type, font }
+  const [chooser, setChooser] = useState(null) // type chooser: 'logo' | 'font-upload' | 'font-google'
   const shareTimer = useRef(null)
 
   // Logo and Ícone share the whole flow (cards, upload modal, viewer, actions).
@@ -186,7 +188,8 @@ export default function FolderPage() {
 
   // Opens the native file picker. A valid file opens the "Nova logo" modal; an
   // invalid one shows a short message near the card and the modal stays closed.
-  async function handleUpload() {
+  // `type` is the logo type picked in the chooser (Ícone and Elementos have none).
+  async function handleUpload(type) {
     setUploadError(null)
     // Elementos accept any file type (up to 50 MB); the other folders only images.
     const file = await openFilePicker(kind.anyFile ? '' : undefined)
@@ -197,7 +200,7 @@ export default function FolderPage() {
       return
     }
     const size = !kind.anyFile || isImageFormat(result.format) ? await readImageSize(file) : {}
-    setUpload({ file, format: result.format, ...size })
+    setUpload({ file, format: result.format, ...(kind.hasType ? { type } : {}), ...size })
   }
 
   // "Gerar paleta": "Criar" closes the modal and puts one placeholder per color in the grid.
@@ -275,7 +278,7 @@ export default function FolderPage() {
 
   // The add card picks one font file or one .zip. A valid pick opens "Nova tipografia";
   // an invalid one shows a short message near the card.
-  async function handleFontUpload() {
+  async function handleFontUpload(type) {
     setUploadError(null)
     const file = await openFilePicker(FONT_ACCEPT)
     if (!file) return
@@ -289,7 +292,7 @@ export default function FolderPage() {
       setUploadError(read.error)
       return
     }
-    setFontModal({ mode: 'upload', font: { family: read.family, weights: read.weights } })
+    setFontModal({ mode: 'upload', type, font: { family: read.family, weights: read.weights } })
   }
 
   // Google fonts have no files: "Baixar" opens the family page in a new tab. Uploaded fonts
@@ -439,15 +442,15 @@ export default function FolderPage() {
                 disabledStyle={card.disabledStyle}
                 onClick={
                   card.action === 'upload-asset'
-                    ? handleUpload
+                    ? () => (kind.hasType ? setChooser('logo') : handleUpload())
                     : card.action === 'create-palette'
                       ? () => setPaletteOpen(true)
                       : card.action === 'generate-palette'
                         ? () => setGenerateOpen(true)
                       : card.action === 'upload-font'
-                        ? handleFontUpload
+                        ? () => setChooser('font-upload')
                         : card.action === 'google-font'
-                          ? () => setFontModal({ mode: 'google' })
+                          ? () => setChooser('font-google')
                           : undefined
                 }
               />
@@ -568,11 +571,42 @@ export default function FolderPage() {
         />
       ) : null}
 
+      {chooser === 'logo' ? (
+        <TypeChooserModal
+          title="Adicione uma logo"
+          options={LOGO_TYPES}
+          usedTypes={usedLogoTypes(identity.logos)}
+          rows={[2, 3]}
+          onClose={() => setChooser(null)}
+          onPick={(type) => {
+            setChooser(null)
+            handleUpload(type)
+          }}
+        />
+      ) : null}
+
+      {chooser === 'font-upload' || chooser === 'font-google' ? (
+        <TypeChooserModal
+          title={chooser === 'font-upload' ? 'Adicionar uma tipografia' : 'Selecionar uma tipografia'}
+          options={FONT_TYPES}
+          usedTypes={usedFontTypes(identity.tipografia)}
+          rows={[3]}
+          onClose={() => setChooser(null)}
+          onPick={(type) => {
+            const source = chooser
+            setChooser(null)
+            if (source === 'font-upload') handleFontUpload(type)
+            else setFontModal({ mode: 'google', type })
+          }}
+        />
+      ) : null}
+
       {fontModal ? (
         <NewFontModal
           identity={identity}
           mode={fontModal.mode}
           initialFont={fontModal.font}
+          initialType={fontModal.type}
           onClose={() => setFontModal(null)}
           onSave={(font, createdRights) => addLogo(identity.id, font, createdRights, 'tipografia')}
         />

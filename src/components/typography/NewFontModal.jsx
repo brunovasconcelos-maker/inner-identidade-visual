@@ -20,7 +20,6 @@ import {
   FONT_TYPES,
   defaultFontTags,
   findFontType,
-  firstFreeFontType,
   pesosLabel,
   sortWeights,
   usedFontTypes,
@@ -43,8 +42,9 @@ function syncFamilyTag(tags, from, to) {
   return tags
 }
 
-function initialDraft(identity, font) {
-  const type = firstFreeFontType(identity.tipografia)
+// The type always comes from the chooser (`initialType`).
+function initialDraft(identity, font, typeId) {
+  const type = findFontType(typeId)
   return {
     type: type.id,
     selectedWeights: font ? allKeys(font.weights) : [],
@@ -73,12 +73,12 @@ function snapshot(font, draft) {
 
 // "Nova tipografia". `mode` is where the font comes from: an uploaded file (already read,
 // `initialFont`) or the Google Fonts picker. A Google font has no rights checkbox.
-export default function NewFontModal({ identity, mode, initialFont, onClose, onSave }) {
+export default function NewFontModal({ identity, mode, initialFont, initialType, onClose, onSave }) {
   const isUpload = mode === 'upload'
   const [font, setFont] = useState(() =>
     initialFont ? { ...initialFont, id: newId(), source: 'upload' } : null,
   )
-  const [draft, setDraft] = useState(() => initialDraft(identity, initialFont))
+  const [draft, setDraft] = useState(() => initialDraft(identity, initialFont, initialType))
   const [panel, setPanel] = useState(null) // 'type' | 'weights' | 'advanced' | null
   const [pickerOpen, setPickerOpen] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)

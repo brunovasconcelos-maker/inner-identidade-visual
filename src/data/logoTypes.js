@@ -40,10 +40,10 @@ export function usedLogoTypes(logos) {
   return new Set(logos.map((logo) => logo.type))
 }
 
-// First type not yet used in the identity (or null when all five are used).
-export function firstFreeLogoType(logos) {
+// True while at least one of the five types is still free in the identity.
+export function hasFreeLogoType(logos) {
   const used = usedLogoTypes(logos)
-  return LOGO_TYPES.find((type) => !used.has(type.id)) || null
+  return LOGO_TYPES.some((type) => !used.has(type.id))
 }
 
 // Logos in the order of the types: principal, secundária, vertical, horizontal, com tagline.
