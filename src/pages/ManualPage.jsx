@@ -10,6 +10,8 @@ import ManualPalettePage from '../components/manual/ManualPalettePage.jsx'
 import ManualTypographyPage from '../components/manual/ManualTypographyPage.jsx'
 import { useIdentities } from '../data/identities.jsx'
 import { headerLogo as pickHeaderLogo, selectionColors } from '../data/manualTheme.js'
+import { sortColors } from '../data/palette.js'
+import { principalHex } from '../data/manualIcon.js'
 import { MANUAL_SECTIONS, manualPath, subOptions, visibleSections } from '../data/manual.js'
 import { useObjectUrl } from '../hooks/useObjectUrl.js'
 
@@ -38,6 +40,9 @@ export default function ManualPage() {
   }
 
   const selection = selectionColors(identity)
+  // Brand color principal hex (hover of the navigation); #1A1A1A without a brand color.
+  const brand = sortColors(identity.paleta).find((color) => color.category === 'marca')
+  const brandHex = brand ? principalHex(brand) : '#1A1A1A'
   const meta = MANUAL_SECTIONS.find((item) => item.slug === section)
 
   return (
@@ -46,6 +51,7 @@ export default function ManualPage() {
       style={{
         '--manual-select-bg': selection.background,
         '--manual-select-fg': selection.foreground,
+        '--manual-brand': brandHex,
       }}
     >
       <aside className="manual-side">

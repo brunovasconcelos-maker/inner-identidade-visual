@@ -4533,3 +4533,91 @@ a.btn {
   width: 48px;
   height: 48px;
 }
+
+/* ---------- Manual: restored rules + previous / next navigation (Figma node 6498:8824) ----------
+   These rules were lost when a later change overwrote the end of this file. */
+
+/* Swatches of the Paleta de cores page copy their hex on click (tooltip: see .cv-tooltip). */
+.manual-swatch--copy {
+  cursor: pointer;
+}
+
+/* Header logo of the sidebar: a link to Intro, no default link styles. */
+.manual-side__logo-link {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  color: inherit;
+  text-decoration: none;
+}
+
+/* End of every page: the navigation is 80px under the content (the main column gap is 48,
+   so 32 more) and the page ends 170px under it (96px of padding plus 74), as in Figma node
+   6488:7870. Full width of the 980px content, two blocks pushed to the edges; a missing side
+   leaves the other one in its place. */
+.manual-pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 980px;
+  margin-top: 32px;
+  margin-bottom: 74px;
+}
+
+/* A link with no default styles in any state. */
+.manual-pager__link,
+.manual-pager__link:link,
+.manual-pager__link:visited,
+.manual-pager__link:hover,
+.manual-pager__link:active {
+  color: inherit;
+  text-decoration: none;
+}
+
+.manual-pager__link {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 8px 0;
+  border-radius: 16px;
+  cursor: pointer;
+}
+
+.manual-pager__link:focus-visible {
+  outline: 2px solid var(--manual-brand, #1a1a1a);
+  outline-offset: 4px;
+}
+
+.manual-pager__caret {
+  display: flex;
+  flex: none;
+  align-items: center;
+  padding: 8px;
+  border-radius: 16px;
+}
+
+.manual-pager__texts {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: normal;
+  white-space: nowrap;
+}
+
+.manual-pager__label {
+  color: #5d5d5d;
+}
+
+.manual-pager__name {
+  color: #000000;
+  transition: color 150ms ease;
+}
+
+.manual-pager__link:hover .manual-pager__name,
+.manual-pager__link:focus-visible .manual-pager__name {
+  color: var(--manual-brand, #1a1a1a);
+}
