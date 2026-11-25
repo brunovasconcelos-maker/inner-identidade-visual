@@ -6,18 +6,18 @@ import {
   ICON_TEXTS,
   bestVersion,
   faviconAddress,
+  pickAvatarBackground,
   pickTileStyle,
   versionKey,
 } from '../../data/manualIcon.js'
 import { downloadLogoVersions, saveBlob } from '../../utils/download.js'
-import { dominantColor, visibleBounds } from '../../utils/imageColor.js'
+import { dominantColor, dominantColors, fitInCircle, visibleBounds } from '../../utils/imageColor.js'
 import { BOX_DARK, BOX_LIGHT, ImageBox, OriginalBox } from './ManualImageBox.jsx'
 import FaviconMockup from './FaviconMockup.jsx'
 
 // Light blue of the manual guides (same as the logo safe space).
 const GUIDE = 'rgba(150, 191, 233, 0.93)'
 const BOX = { width: 580, height: 360 }
-const SAFE_AREA = [112.522, 140]
 const HERO = [225.045, 280]
 const VARIANT = [160.746, 200]
 const WHITE = '#FFFFFF'
@@ -62,52 +62,52 @@ function useBounds(file) {
   return bounds
 }
 
-// Safe space of the icon: s = 1/8 of the visible icon width, a crossed square of s x s in
-// each corner of the outer rectangle, and the circle for round applications.
+// Safe space of the icon, one SVG on a square canvas (C = 60% of the box height):
+//  - outer square: the canvas; s = C / 8;
+//  - inner square (safe area): the canvas inset by s on all sides, side 0.75C;
+//  - circle (round crop): inscribed in the inner square, same center;
+//  - an s x s crossed square in each corner between the outer and the inner square;
+//  - the icon with its transparent pixels trimmed, scaled so its visible bounds fit
+//    entirely inside the circle.
+const CANVAS = BOX.height * 0.6
 function IconSafeSpace({ file }) {
   const url = useObjectUrl(file)
-  const bounds = useBounds(file)
-  if (!url || !bounds) return <svg className="manual-safe" viewBox={`0 0 ${BOX.width} ${BOX.height}`} />
-  const area = {
-    x: (BOX.width - SAFE_AREA[0]) / 2,
-    y: (BOX.height - SAFE_AREA[1]) / 2,
-    width: SAFE_AREA[0],
-    height: SAFE_AREA[1],
-  }
-  const drawnHeight = Math.min(area.width / bounds.ratio, area.height)
-  const drawnWidth = drawnHeight * bounds.ratio
-  const image = {
-    x: area.x + (area.width - drawnWidth) / 2,
-    y: area.y + (area.height - drawnHeight) / 2,
-    width: drawnWidth,
-    height: drawnHeight,
-  }
-  const inner = {
-    x: image.x + bounds.x0 * image.width,
-    y: image.y + bounds.y0 * image.height,
-    width: (bounds.x1 - bounds.x0) * image.width,
-    height: (bounds.y1 - bounds.y0) * image.height,
-  }
-  const s = inner.width / 8
-  const outer = { x: inner.x - s, y: inner.y - s, width: inner.width + 2 * s, height: inner.height + 2 * s }
-  const right = inner.x + inner.width
-  const bottom = inner.y + inner.height
-  const cx = inner.x + inner.width / 2
-  const cy = inner.y + inner.height / 2
-  // Circle inscribed in the outer square (side = the larger outer side), inset by s.
-  const radius = (Math.max(outer.width, outer.height) - 2 * s) / 2
+  const s = CANVAS / 8
+  const cx = BOX.width / 2
+  const cy = BOX.height / 2
+  const radius = (CANVAS * 0.75) / 2
+  const [fit, setFit] = useState(null)
+  useEffect(() => {
+    let alive = true
+    setFit(null)
+    fitInCircle(file, radius).then((value) => alive && setFit(value))
+    return () => {
+      alive = false
+    }
+  }, [file, radius])
+  const outer = { x: cx - CANVAS / 2, y: cy - CANVAS / 2 }
+  const inner = { x: outer.x + s, y: outer.y + s, size: CANVAS - 2 * s }
   const corners = [
     [outer.x, outer.y],
-    [right, outer.y],
-    [outer.x, bottom],
-    [right, bottom],
+    [outer.x + CANVAS - s, outer.y],
+    [outer.x, outer.y + CANVAS - s],
+    [outer.x + CANVAS - s, outer.y + CANVAS - s],
   ]
   return (
     <svg className="manual-safe" viewBox={`0 0 ${BOX.width} ${BOX.height}`} role="img" aria-label="Safe space">
-      <image href={url} x={image.x} y={image.y} width={image.width} height={image.height} preserveAspectRatio="xMidYMid meet" />
+      {url && fit ? (
+        <image
+          href={url}
+          x={cx + fit.dx}
+          y={cy + fit.dy}
+          width={fit.width}
+          height={fit.height}
+          preserveAspectRatio="none"
+        />
+      ) : null}
       <g fill="none" stroke={GUIDE} strokeWidth="1">
-        <rect x={outer.x} y={outer.y} width={outer.width} height={outer.height} />
-        <rect x={inner.x} y={inner.y} width={inner.width} height={inner.height} />
+        <rect x={outer.x} y={outer.y} width={CANVAS} height={CANVAS} />
+        <rect x={inner.x} y={inner.y} width={inner.size} height={inner.size} />
         <circle cx={cx} cy={cy} r={radius} />
         {corners.map(([x, y]) => (
           <g key={`${x}-${y}`}>
@@ -121,42 +121,20 @@ function IconSafeSpace({ file }) {
   )
 }
 
-// Minimum size: the icon at 64, 32 and 16 px (real pixels) on one baseline and a 1:1 ruler.
+// Minimum size: the icon at 64, 32 and 16 px (real pixels), centered in the box with equal
+// gaps and a shared baseline, each label centered below its icon.
 const SIZES = [64, 32, 16]
 const GAP = 32
 function MinSize({ file }) {
   const url = useObjectUrl(file)
-  const total = SIZES.reduce((sum, size) => sum + size, 0) + GAP * (SIZES.length - 1)
-  const left = Math.round((BOX.width - total) / 2)
-  const ticks = []
-  for (let value = 0; value <= 64; value += 4) ticks.push(value)
-  let offset = 0
   return (
-    <div className="icon-min" style={{ paddingLeft: left }}>
-      <div className="icon-min__row" style={{ gap: GAP }}>
-        {SIZES.map((size) => {
-          offset += size
-          return (
-            <div className="icon-min__item" key={size} style={{ width: size }}>
-              {url ? <img src={url} alt="" width={size} height={size} style={{ width: size, height: size }} /> : null}
-              <span className="icon-min__label">{`${size}px`}</span>
-            </div>
-          )
-        })}
-      </div>
-      <svg className="icon-min__ruler" width="65" height="30" viewBox="0 0 65 30" aria-hidden="true" overflow="visible">
-        <g stroke={GUIDE} strokeWidth="1" shapeRendering="crispEdges">
-          <line x1="0.5" y1="0.5" x2="64.5" y2="0.5" />
-          {ticks.map((value) => (
-            <line key={value} x1={value + 0.5} y1="0.5" x2={value + 0.5} y2={value % 16 === 0 ? 10.5 : 5.5} />
-          ))}
-        </g>
-        {[0, 16, 32, 48, 64].map((value) => (
-          <text key={value} x={value + 0.5} y="24" textAnchor="middle" fontSize="10" fill={GUIDE} fontFamily="Inter, sans-serif">
-            {value}
-          </text>
-        ))}
-      </svg>
+    <div className="icon-min" style={{ gap: GAP }}>
+      {SIZES.map((size) => (
+        <div className="icon-min__item" key={size} style={{ width: size, height: size }}>
+          {url ? <img src={url} alt="" width={size} height={size} style={{ width: size, height: size }} /> : null}
+          <span className="icon-min__label">{`${size}px`}</span>
+        </div>
+      ))}
     </div>
   )
 }
@@ -210,6 +188,16 @@ export default function ManualIconPage({ identity }) {
   const versions = useVersions(icon)
   const ready = versions.every((version) => version.color)
   const style = ready ? pickTileStyle(versions, identity.paleta) : null
+  // Avatars use the original icon on a palette color picked against its dominant colors.
+  const [dominant, setDominant] = useState(null)
+  useEffect(() => {
+    let alive = true
+    dominantColors(icon.file).then((value) => alive && setDominant(value))
+    return () => {
+      alive = false
+    }
+  }, [icon.file])
+  const avatarBackground = dominant ? pickAvatarBackground(dominant, identity.paleta) : null
   const faviconVersion = ready ? bestVersion(versions, WHITE).version : versions[0]
 
   return (
@@ -320,10 +308,10 @@ export default function ManualIconPage({ identity }) {
               {style ? <Tile version={style.version} background={style.background} shape="22.37%" /> : null}
             </Application>
             <Application title="Avatar quadrado" text={ICON_TEXTS.square}>
-              {style ? <Tile version={style.version} background={style.background} shape="4px" /> : null}
+              {avatarBackground ? <Tile version={versions[0]} background={avatarBackground} shape="4px" /> : null}
             </Application>
             <Application title="Avatar redondo" text={ICON_TEXTS.round}>
-              {style ? <Tile version={style.version} background={style.background} shape="50%" round /> : null}
+              {avatarBackground ? <Tile version={versions[0]} background={avatarBackground} shape="50%" round /> : null}
             </Application>
           </div>
         </section>

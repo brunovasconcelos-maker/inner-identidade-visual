@@ -3950,41 +3950,30 @@ a.btn {
 
 .icon-min {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.icon-min__row {
-  display: flex;
   align-items: flex-end;
+  justify-content: center;
 }
 
 .icon-min__item {
-  display: flex;
+  position: relative;
   flex: none;
-  flex-direction: column;
-  align-items: center;
 }
 
 .icon-min__item img {
   display: block;
-  flex: none;
   object-fit: contain;
 }
 
 .icon-min__label {
+  position: absolute;
+  top: 100%;
+  left: 50%;
   margin-top: 12px;
+  transform: translateX(-50%);
   font-size: 12px;
   line-height: normal;
   color: #5d5d5d;
   white-space: nowrap;
-}
-
-.icon-min__ruler {
-  display: block;
-  margin-top: 40px;
 }
 
 .icon-apps {

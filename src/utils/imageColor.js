@@ -58,6 +58,39 @@ export async function dominantColor(file) {
   }
 }
 
+// The colors that make up an image: opaque pixels grouped in 4 bit per channel buckets, each
+// with its average color and its share of the opaque pixels. Only buckets of at least 2%
+// count: [{ hex, share }], the most present first.
+export async function dominantColors(file) {
+  try {
+    const { data } = await rasterize(file, 128)
+    const buckets = new Map()
+    let total = 0
+    for (let i = 0; i < data.length; i += 4) {
+      const alpha = data[i + 3] / 255
+      if (alpha < 0.5) continue
+      const key = ((data[i] >> 4) << 8) | ((data[i + 1] >> 4) << 4) | (data[i + 2] >> 4)
+      const bucket = buckets.get(key) || { r: 0, g: 0, b: 0, weight: 0 }
+      bucket.r += data[i] * alpha
+      bucket.g += data[i + 1] * alpha
+      bucket.b += data[i + 2] * alpha
+      bucket.weight += alpha
+      buckets.set(key, bucket)
+      total += alpha
+    }
+    const hex = (n, weight) => Math.round(n / weight).toString(16).padStart(2, '0')
+    return [...buckets.values()]
+      .filter((bucket) => total > 0 && bucket.weight / total >= 0.02)
+      .sort((a, b) => b.weight - a.weight)
+      .map((bucket) => ({
+        hex: `#${hex(bucket.r, bucket.weight)}${hex(bucket.g, bucket.weight)}${hex(bucket.b, bucket.weight)}`.toUpperCase(),
+        share: bucket.weight / total,
+      }))
+  } catch {
+    return []
+  }
+}
+
 // Connected components (8 neighbors) of the opaque pixels. Each one: bounding box + area.
 function components(mask, width, height) {
   const seen = new Uint8Array(mask.length)
@@ -188,4 +221,69 @@ export function lowContrastBackground(dominantHex) {
     return best ? best.hex : null
   }
   return search(1) || search(-1) || dominantHex
+}
+
+// Visible bounds of the image rendered at exactly width x height pixels, as fractions of
+// that size: { x0, y0, x1, y1 }.
+async function boundsAtSize(file, width, height) {
+  const url = URL.createObjectURL(file)
+  try {
+    const image = await loadImage(url)
+    const canvas = document.createElement('canvas')
+    canvas.width = width
+    canvas.height = height
+    const context = canvas.getContext('2d', { willReadFrequently: true })
+    context.drawImage(image, 0, 0, width, height)
+    const { data } = context.getImageData(0, 0, width, height)
+    let x0 = width
+    let y0 = height
+    let x1 = -1
+    let y1 = -1
+    for (let y = 0; y < height; y += 1) {
+      for (let x = 0; x < width; x += 1) {
+        if (data[(y * width + x) * 4 + 3] <= 8) continue
+        if (x < x0) x0 = x
+        if (x > x1) x1 = x
+        if (y < y0) y0 = y
+        if (y > y1) y1 = y
+      }
+    }
+    if (x1 < 0) return { x0: 0, y0: 0, x1: 1, y1: 1 }
+    return { x0: x0 / width, y0: y0 / height, x1: (x1 + 1) / width, y1: (y1 + 1) / height }
+  } finally {
+    URL.revokeObjectURL(url)
+  }
+}
+
+// Scales an icon so its visible bounds (transparent pixels trimmed) fit entirely inside a
+// circle of `radius`, centered on it. The bounds are measured on the pixels rendered at the
+// very scale used to draw, refined three times. Resolves with the drawn image, relative to
+// the circle center: { width, height, dx, dy } (dx, dy = top left of the image).
+export async function fitInCircle(file, radius) {
+  const whole = await visibleBounds(file)
+  const ratio = whole.ratio
+  const SAMPLES = 4 // rendered pixels per drawn pixel
+  const fit = (bounds) => {
+    const w = (bounds.x1 - bounds.x0) * ratio
+    const h = bounds.y1 - bounds.y0
+    return (radius * 0.995) / Math.hypot(w / 2, h / 2)
+  }
+  let bounds = whole
+  let k = fit(bounds)
+  for (let pass = 0; pass < 3; pass += 1) {
+    try {
+      const width = Math.min(2048, Math.max(1, Math.round(ratio * k * SAMPLES)))
+      const height = Math.min(2048, Math.max(1, Math.round(k * SAMPLES)))
+      bounds = await boundsAtSize(file, width, height)
+    } catch {
+      break
+    }
+    k = fit(bounds)
+  }
+  return {
+    width: ratio * k,
+    height: k,
+    dx: -((bounds.x0 + bounds.x1) / 2) * ratio * k,
+    dy: -((bounds.y0 + bounds.y1) / 2) * k,
+  }
 }

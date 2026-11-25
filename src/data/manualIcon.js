@@ -1,4 +1,5 @@
 import { contrastRatio, toneRows, upperHex } from './manualPalette.js'
+import { deltaE, labChroma } from './colorDistance.js'
 
 export const ICON_INTRO = (marca) => [
   `O ícone é a versão mais compacta de ${marca}. Ele concentra a identidade em um símbolo simples, pensado para espaços pequenos e para ser reconhecido rapidamente.`,
@@ -76,4 +77,21 @@ export function pickTileStyle(versions, palette) {
   }
   if (top) return { background: top.hex, version: original }
   return { background: '#F7F7F7', version: bestVersion(versions, '#F7F7F7').version }
+}
+
+// Background of the avatar tiles (Avatar quadrado and Avatar redondo), always with the
+// original icon: the principal hex of any palette color with the highest contrast against
+// the icon's highest chroma dominant color, skipping colors with a deltaE below 10 against
+// any dominant color of the icon. #FFFFFF when no palette color qualifies.
+export function pickAvatarBackground(dominant, palette) {
+  if (dominant.length === 0) return '#FFFFFF'
+  const target = dominant.reduce((top, color) => (labChroma(color.hex) > labChroma(top.hex) ? color : top)).hex
+  let best = null
+  for (const color of palette) {
+    const hex = principalHex(color)
+    if (dominant.some((item) => deltaE(hex, item.hex) < 10)) continue
+    const ratio = contrastRatio(target, hex)
+    if (!best || ratio > best.ratio) best = { hex, ratio }
+  }
+  return best ? best.hex : '#FFFFFF'
 }
