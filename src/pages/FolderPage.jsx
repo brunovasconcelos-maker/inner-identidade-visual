@@ -15,6 +15,7 @@ import LibraryCard from '../components/library/LibraryCard.jsx'
 import NewLibraryModal from '../components/library/NewLibraryModal.jsx'
 import FontCard from '../components/typography/FontCard.jsx'
 import TypeChooserModal from '../components/TypeChooserModal.jsx'
+import FontViewer from '../components/typography/FontViewer.jsx'
 import NewFontModal from '../components/typography/NewFontModal.jsx'
 import ColorViewer from '../components/palette/ColorViewer.jsx'
 import NewPaletteModal from '../components/palette/NewPaletteModal.jsx'
@@ -371,7 +372,7 @@ export default function FolderPage() {
     setMenuLogoId(null)
     if (action === 'download') downloadFontsOf([font])
     else if (action === 'delete') setDeleteTarget([font.id])
-    // "Editar": no action yet.
+    else if (action === 'edit') setViewerId(font.id)
   }
 
   // "Editar" has no action yet. "Copiar hex" copies the main hex and shows "Copiado".
@@ -548,6 +549,7 @@ export default function FolderPage() {
                 onOpenMenu={setMenuLogoId}
                 onCloseMenu={closeMenu}
                 onAction={handleFontAction}
+                onOpen={setViewerId}
               />
             ))}
             {gridColors.map((entry) =>
@@ -609,7 +611,20 @@ export default function FolderPage() {
         />
       ) : null}
 
-      {viewerId && !isPalette ? (
+      {viewerId && isTypo ? (
+        <FontViewer
+          identity={identity}
+          fonts={visibleFonts}
+          fontId={viewerId}
+          deleteOpen={Boolean(deleteTarget)}
+          onChangeFont={setViewerId}
+          onClose={() => setViewerId(null)}
+          onDelete={(font) => setDeleteTarget([font.id])}
+          onUpdate={(fontId, changes, rights) => updateLogo(identity.id, fontId, changes, rights, 'tipografia')}
+        />
+      ) : null}
+
+      {viewerId && !isPalette && !isTypo && !isLibrary ? (
         <LogoViewer
           identity={identity}
           logos={visibleLogos}

@@ -27,6 +27,7 @@ export default function FontCard({
   onOpenMenu,
   onCloseMenu,
   onAction,
+  onOpen,
 }) {
   const kebabRef = useRef(null)
   const preview = useFontPreview(font, font.selectedWeights)
@@ -64,7 +65,19 @@ export default function FontCard({
   return (
     <div className={classes}>
       <div className="logo-card__top">
-        <div className="logo-card__preview">
+        <div
+          className="logo-card__preview"
+          role="button"
+          tabIndex={0}
+          aria-label={`Abrir ${font.family}`}
+          onClick={() => onOpen(font.id)}
+          onKeyDown={(event) => {
+            if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
+              event.preventDefault()
+              onOpen(font.id)
+            }
+          }}
+        >
           <span
             className="font-card__aa"
             style={{
