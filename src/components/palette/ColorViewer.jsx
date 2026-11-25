@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { CaretLeft, CaretRight, Plus, Trash, X } from '@phosphor-icons/react'
 import ConfirmDialog from '../ConfirmDialog.jsx'
+import { useCopyHex } from './useCopyHex.jsx'
 import { ToneRow } from './ColorPanel.jsx'
 import { CATEGORIES, nextExtraStep, sortTones, toneHex } from '../../data/palette.js'
 
@@ -59,11 +60,7 @@ export default function ColorViewer({
   const [pending, setPending] = useState(null) // action waiting for the discard dialog
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState(null)
-  const [hover, setHover] = useState(null) // { key, hex, x, y }
-  const [copiedKey, setCopiedKey] = useState(null)
-  const copyTimer = useRef(null)
-
-  useEffect(() => () => clearTimeout(copyTimer.current), [])
+  const { area, tooltip } = useCopyHex()
 
   const savedText = color ? categoryTextOf(color.category) : ''
   const draft = color
@@ -114,34 +111,6 @@ export default function ColorViewer({
     }
   }
 
-  async function copy(key, hex) {
-    try {
-      await navigator.clipboard.writeText(hex)
-    } catch (error) {
-      console.error('Could not copy', error)
-    }
-    setCopiedKey(key)
-    clearTimeout(copyTimer.current)
-    copyTimer.current = setTimeout(() => setCopiedKey(null), 1500)
-  }
-
-  // Props shared by every color area: hover tooltip, pointer cursor and copy on click.
-  const area = (key, hex) => ({
-    role: 'button',
-    tabIndex: 0,
-    'aria-label': `Copiar ${hex}`,
-    onMouseEnter: (event) => setHover({ key, hex, x: event.clientX, y: event.clientY }),
-    onMouseMove: (event) => setHover({ key, hex, x: event.clientX, y: event.clientY }),
-    onMouseLeave: () => setHover(null),
-    onClick: () => copy(key, hex),
-    onKeyDown: (event) => {
-      if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault()
-        copy(key, hex)
-      }
-    },
-  })
-
   // Keep the latest values for the key handler without re-binding it on every render.
   const latest = useRef({})
   latest.current = { prev, next, request, pending, deleteOpen }
@@ -174,11 +143,6 @@ export default function ColorViewer({
   const category = CATEGORIES[color.category]
   const others = sortTones(color.tones).filter((tone) => !tone.isMain)
   const canAdd = nextExtraStep(draft.tones) !== null
-  // The tooltip sits 32px to the right of the cursor, as in Figma; it flips to the left
-  // near the right edge of the screen.
-  const tooltipLeft =
-    hover && (hover.x + 32 + 110 > window.innerWidth ? hover.x - 32 - 100 : hover.x + 32)
-
   return (
     <div
       className="viewer"
@@ -334,11 +298,7 @@ export default function ColorViewer({
         </div>
       </aside>
 
-      {hover ? (
-        <div className="cv-tooltip" style={{ left: tooltipLeft, top: hover.y }}>
-          {copiedKey === hover.key ? 'Copiado' : hover.hex}
-        </div>
-      ) : null}
+      {tooltip}
 
       {pending ? (
         <ConfirmDialog

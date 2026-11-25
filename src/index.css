@@ -3227,7 +3227,10 @@ a.btn {
   flex-direction: column;
   gap: 48px;
   width: 980px;
-  margin-left: 340px;
+  max-width: 980px;
+  /* 340px at the 1440px of Figma; on wider screens the extra space is split equally on both
+     sides of the content (the sidebar and the kebab button stay fixed). */
+  margin-left: max(340px, calc(340px + (100% - 1440px) / 2));
   padding: 64px 0 96px;
 }
 
@@ -3937,6 +3940,11 @@ a.btn {
   color: #000000;
   white-space: nowrap;
   cursor: pointer;
+  transition: background-color 150ms ease;
+}
+
+.manual-weight__download:hover:not(:disabled) {
+  background: #f7f7f7;
 }
 
 .manual-weight__download:disabled {
@@ -4406,4 +4414,69 @@ a.btn {
   text-align: center;
   color: #5d5d5d;
   overflow-wrap: anywhere;
+}
+
+/* Swatches of the Paleta de cores page copy their hex on click (tooltip: see .cv-tooltip). */
+.manual-swatch--copy {
+  cursor: pointer;
+}
+
+/* Header logo of the sidebar: a link to Intro. */
+.manual-side__logo-link {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Previous / next navigation at the end of every page (Figma node 6498:8824). */
+.manual-pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 980px;
+  margin-top: 32px; /* 80px under the content: the main column gap is 48 */
+}
+
+.manual-pager__link {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 8px 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.manual-pager__caret {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  border-radius: 16px;
+}
+
+.manual-pager__texts {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: normal;
+  white-space: nowrap;
+}
+
+.manual-pager__label {
+  color: #5d5d5d;
+}
+
+.manual-pager__name {
+  color: #000000;
+  transition: color 150ms ease;
+}
+
+.manual-pager__link:hover .manual-pager__name,
+.manual-pager__link:focus-visible .manual-pager__name {
+  color: var(--manual-select-fg, #1a1a1a);
 }

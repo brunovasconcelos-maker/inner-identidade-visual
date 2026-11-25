@@ -1,4 +1,5 @@
 import ManualScrollSections from './ManualScrollSections.jsx'
+import { useCopyHex } from '../palette/useCopyHex.jsx'
 import { categoryText, paragraphsOf } from '../../data/paletteTexts.js'
 import {
   CATEGORY_TITLES,
@@ -12,11 +13,11 @@ import {
 
 // One swatch: step and hex at the bottom left, the contrast badge at the top left. The text
 // is black or white, whichever has the better contrast against the swatch.
-function Swatch({ tone, className }) {
+function Swatch({ tone, className, area, id }) {
   const hex = upperHex(tone.hex)
   const { ink, rating } = inkFor(hex)
   return (
-    <div className={className} style={{ background: hex, color: ink }}>
+    <div className={`${className} manual-swatch--copy`} style={{ background: hex, color: ink }} {...area(`${id}-${tone.step}`, hex)}>
       <div className="manual-swatch__badge">
         <span className="manual-swatch__square" style={{ background: ink }} />
         <span className="manual-swatch__rating">{rating}</span>
@@ -29,17 +30,17 @@ function Swatch({ tone, className }) {
   )
 }
 
-function ColorBlock({ color }) {
+function ColorBlock({ color, area }) {
   const { main, others } = toneRows(color)
   return (
     <div className="manual-color">
       <h3 className="manual-h2">{color.name}</h3>
       <div className="manual-color__swatches">
-        <Swatch tone={main} className="manual-swatch manual-swatch--main" />
+        <Swatch tone={main} id={color.id} area={area} className="manual-swatch manual-swatch--main" />
         {others.length > 0 ? (
           <div className="manual-color__strip">
             {others.map((tone) => (
-              <Swatch key={tone.step} tone={tone} className="manual-swatch manual-swatch--tone" />
+              <Swatch key={tone.step} tone={tone} id={color.id} area={area} className="manual-swatch manual-swatch--tone" />
             ))}
           </div>
         ) : null}
@@ -53,6 +54,7 @@ function ColorBlock({ color }) {
 export default function ManualPalettePage({ identity, sub }) {
   const categories = visibleCategories(identity)
   const marca = identity.name
+  const { area, tooltip } = useCopyHex()
   return (
     <>
       <div className="manual-intro">
@@ -71,7 +73,7 @@ export default function ManualPalettePage({ identity, sub }) {
         {categories.map((category, index) => (
           <section key={category} id={`palette-${category}`} className="manual-palette-section">
             {colorsOfCategory(identity, category).map((color) => (
-              <ColorBlock key={color.id} color={color} />
+              <ColorBlock key={color.id} color={color} area={area} />
             ))}
             <div className="manual-text-block manual-palette-text">
               <h2 className="manual-h2">{CATEGORY_TITLES[category]}</h2>
@@ -85,6 +87,7 @@ export default function ManualPalettePage({ identity, sub }) {
           </section>
         ))}
       </ManualScrollSections>
+      {tooltip}
     </>
   )
 }

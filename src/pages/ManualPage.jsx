@@ -1,5 +1,7 @@
-import { Navigate, useParams } from 'react-router-dom'
+import { useLayoutEffect } from 'react'
+import { Link, Navigate, useParams } from 'react-router-dom'
 import { DotsThreeVertical } from '@phosphor-icons/react'
+import ManualPager from '../components/manual/ManualPager.jsx'
 import ManualSidebar from '../components/manual/ManualSidebar.jsx'
 import ManualLogoPage from '../components/manual/ManualLogoPage.jsx'
 import ManualIconPage from '../components/manual/ManualIconPage.jsx'
@@ -18,6 +20,12 @@ export default function ManualPage() {
   const identity = identities.find((item) => item.id === id)
   const headerLogo = identity ? pickHeaderLogo(identity) : null
   const headerUrl = useObjectUrl(headerLogo ? headerLogo.file : null)
+
+  // Changing page shows the new one from the top, title visible. (Sub options of a scrolling
+  // page do not change `section`: they scroll inside the page.)
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0)
+  }, [section, id])
 
   if (loading) return null
   if (!identity) return <Navigate to="/" replace />
@@ -42,11 +50,21 @@ export default function ManualPage() {
     >
       <aside className="manual-side">
         <div className="manual-side__logo">
-          {headerUrl ? (
-            <img src={headerUrl} alt={identity.name} className="manual-side__logo-img" />
-          ) : (
-            <span className="manual-side__logo-text">{identity.name}</span>
-          )}
+          {/* The logo goes to Intro, at the top of the page. */}
+          <Link
+            to={manualPath(identity.id)}
+            className="manual-side__logo-link"
+            aria-label={`${identity.name}: Intro`}
+            onClick={() => {
+              if (section === 'intro') window.scrollTo({ top: 0, behavior: 'smooth' })
+            }}
+          >
+            {headerUrl ? (
+              <img src={headerUrl} alt={identity.name} className="manual-side__logo-img" />
+            ) : (
+              <span className="manual-side__logo-text">{identity.name}</span>
+            )}
+          </Link>
         </div>
         <ManualSidebar identity={identity} slug={section} sub={sub} />
       </aside>
@@ -61,6 +79,7 @@ export default function ManualPage() {
         {section === 'biblioteca-de-icones' ? <ManualLibraryPage identity={identity} /> : null}
         {section === 'paleta-de-cores' ? <ManualPalettePage identity={identity} sub={sub} /> : null}
         {section === 'tipografia' ? <ManualTypographyPage identity={identity} sub={sub} /> : null}
+        <ManualPager identity={identity} slug={section} />
       </main>
     </div>
   )

@@ -17,7 +17,21 @@ export async function fetchGoogleWeight(family, weight) {
     await fetch(`https://fonts.googleapis.com/css2?family=${name}:ital,wght@${weight.italic ? 1 : 0},${weight.weight}&display=swap`)
   ).text()
   const blocks = [...css.matchAll(/\/\*\s*([\w-]+)\s*\*\/\s*@font-face\s*\{([^}]*)\}/g)]
-  const block = blocks.find((match) => match[1] === 'latin') || blocks[blocks.length - 1]
+  // Only the blocks of the requested style and weight count (a range such as "100 900" covers
+  // it too): never the file of another weight or of the other style.
+  const matching = blocks.filter((match) => {
+    const body = match[2]
+    const style = /font-style:\s*(\w+)/.exec(body)
+    const range = /font-weight:\s*(\d+)(?:\s+(\d+))?/.exec(body)
+    if (style && (style[1] === 'italic') !== Boolean(weight.italic)) return false
+    if (range) {
+      const low = Number(range[1])
+      const high = Number(range[2] || range[1])
+      if (weight.weight < low || weight.weight > high) return false
+    }
+    return true
+  })
+  const block = matching.find((match) => match[1] === 'latin') || matching[matching.length - 1]
   const url = block && /url\((https:[^)]+)\)/.exec(block[2])
   if (!url) throw new Error(`No file for ${family} ${weight.weight}${weight.italic ? ' italic' : ''}`)
   const response = await fetch(url[1])
@@ -25,11 +39,22 @@ export async function fetchGoogleWeight(family, weight) {
   return new Blob([await response.blob()], { type: 'font/woff2' })
 }
 
-// "Download peso": the stored file of an uploaded font (original name), or the file fetched
-// from Google as "[Family]-[Style].woff2".
+const sameStyle = (a, b) => a.weight === b.weight && Boolean(a.italic) === Boolean(b.italic)
+
+// The stored weight of the font with exactly this weight AND style (normal or italic).
+function storedWeight(font, weight) {
+  return font.weights.find((item) => sameStyle(item, weight)) || null
+}
+
+// "Download peso": ONLY the weight and style of the row. An uploaded font gives the stored file
+// of that weight and style (original name); a Google font gives the file fetched for that
+// weight and style as "[Family]-[Style].woff2". It fails, and the button says so, when that
+// exact file is not there; it never falls back to another weight or to the whole family.
 export async function downloadWeight(font, weight) {
   if (font.source === 'upload') {
-    if (weight.file) saveBlob(weight.file, weight.file.name)
+    const stored = storedWeight(font, weight)
+    if (!stored || !stored.file) throw new Error(`No file for ${weight.weight}${weight.italic ? ' italic' : ''}`)
+    saveBlob(stored.file, stored.file.name)
     return
   }
   saveBlob(await fetchGoogleWeight(font.family, weight), googleFileName(font.family, weight))
