@@ -69,6 +69,29 @@ export function defaultFontTexts(brandName, type) {
   return null
 }
 
+// ---------- icon ----------
+
+// Default texts of the icon.
+export function defaultIconTexts(brandName) {
+  return {
+    description: `Este é o ícone oficial de ${brandName}. Ele reúne em um único símbolo os elementos mais marcantes da marca e funciona sozinho, sem precisar do nome.`,
+    useCases:
+      'Use em espaços reduzidos ou quadrados, como foto de perfil, ícone de aplicativo, favicon, selos e carimbos. Aplique sempre a partir dos arquivos originais, sem alterações.',
+  }
+}
+
+// An icon with its empty description or use cases filled, or the same object.
+export function withDefaultIconTexts(icon, brandName) {
+  const empty = (value) => !String(value || '').trim()
+  if (!empty(icon.description) && !empty(icon.useCases)) return icon
+  const defaults = defaultIconTexts(brandName)
+  return {
+    ...icon,
+    description: empty(icon.description) ? defaults.description : icon.description,
+    useCases: empty(icon.useCases) ? defaults.useCases : icon.useCases,
+  }
+}
+
 // A font with its empty description or use cases filled, or the same object.
 export function withDefaultFontTexts(font, brandName) {
   const defaults = defaultFontTexts(brandName, font.type)
@@ -100,8 +123,15 @@ export function withDefaultLogoTexts(logo, brandName) {
 export function withDefaultTextsInIdentity(identity) {
   const logos = identity.logos.map((logo) => withDefaultLogoTexts(logo, identity.name))
   const tipografia = identity.tipografia.map((font) => withDefaultFontTexts(font, identity.name))
+  const icones = identity.icones.map((icon) => withDefaultIconTexts(icon, identity.name))
   const logosChanged = logos.some((logo, index) => logo !== identity.logos[index])
   const fontsChanged = tipografia.some((font, index) => font !== identity.tipografia[index])
-  if (!logosChanged && !fontsChanged) return identity
-  return { ...identity, ...(logosChanged ? { logos } : {}), ...(fontsChanged ? { tipografia } : {}) }
+  const iconsChanged = icones.some((icon, index) => icon !== identity.icones[index])
+  if (!logosChanged && !fontsChanged && !iconsChanged) return identity
+  return {
+    ...identity,
+    ...(logosChanged ? { logos } : {}),
+    ...(fontsChanged ? { tipografia } : {}),
+    ...(iconsChanged ? { icones } : {}),
+  }
 }

@@ -1,44 +1,10 @@
 import { useEffect, useState } from 'react'
-import { DownloadSimple } from '@phosphor-icons/react'
 import { useObjectUrl } from '../../hooks/useObjectUrl.js'
 import { LOGO_SECTIONS } from '../../data/manual.js'
 import { downloadLogoVersions, saveBlob } from '../../utils/download.js'
 import { dominantColor, lowContrastBackground } from '../../utils/imageColor.js'
 import SafeSpaceDiagram from './SafeSpaceDiagram.jsx'
-
-const BOX_LIGHT = '#f7f7f7'
-const BOX_DARK = '#000000'
-
-// Gray (or black) box with the logo contained and centered. The download button shows
-// on hover only.
-function ImageBox({ file, fileName, bg, height, inner, label }) {
-  const url = useObjectUrl(file)
-  return (
-    <div className="manual-box" style={{ background: bg, height }}>
-      {url ? (
-        <img
-          className="manual-box__img"
-          style={{ width: inner[0], height: inner[1] }}
-          src={url}
-          alt={label}
-        />
-      ) : null}
-      <button
-        type="button"
-        className="manual-box__download"
-        aria-label={`Baixar ${label}`}
-        onClick={() => saveBlob(file, fileName)}
-      >
-        <DownloadSimple size={24} color="#000000" weight="regular" />
-      </button>
-    </div>
-  )
-}
-
-// The original logo is always shown on the neutral gray.
-function OriginalBox({ file, fileName, height, inner, label }) {
-  return <ImageBox file={file} fileName={fileName} bg={BOX_LIGHT} height={height} inner={inner} label={label} />
-}
+import { BOX_DARK, BOX_LIGHT, ImageBox, OriginalBox } from './ManualImageBox.jsx'
 
 // A box that renders the logo with one incorrect use applied in code.
 function MisuseBox({ file, style, bg }) {
@@ -152,7 +118,7 @@ export default function ManualLogoSection({ identity, logo }) {
       <section className="manual-block manual-block--row">
         <div className="manual-text-block manual-text-block--narrow">
           <h2 className="manual-h2">Safe space</h2>
-          <div className="manual-p">
+          <div className="manual-p manual-p--spaced">
             <p>
               {`A área de proteção garante que a logo tenha espaço para respirar e seja lida com clareza. Ela é medida pela altura da letra “${letter}” e deve ficar livre em todos os lados da logo.`}
             </p>
