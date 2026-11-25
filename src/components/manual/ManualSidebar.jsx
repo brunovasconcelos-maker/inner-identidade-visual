@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { LOGO_GOTO_EVENT } from './ManualLogoPage.jsx'
+import { MANUAL_GOTO_EVENT } from './ManualScrollSections.jsx'
 import { subOptions, manualPath, visibleSections } from '../../data/manual.js'
 
 // Height of a top level row and the gap between rows (Figma node 6479:5211).
 const ROW = 32
 const GAP = 8
+// Pages whose sub options scroll to a section of the same page.
+const SCROLLING_PAGES = ['logo', 'paleta-de-cores']
 
 function usePrefersReducedMotion() {
   const [reduced, setReduced] = useState(
@@ -77,11 +79,13 @@ export default function ManualSidebar({ identity, slug, sub }) {
                         style={{ '--i': index }}
                         aria-current={sub === option.id ? 'page' : undefined}
                         onClick={
-                          itemSlug === 'logo'
+                          SCROLLING_PAGES.includes(itemSlug)
                             ? (event) => {
-                                // The Logo page is one scroll: go to the section, no page change.
+                                // These pages are one scroll: go to the section, no page change.
                                 event.preventDefault()
-                                window.dispatchEvent(new CustomEvent(LOGO_GOTO_EVENT, { detail: option.id }))
+                                window.dispatchEvent(
+                                  new CustomEvent(MANUAL_GOTO_EVENT, { detail: { slug: itemSlug, id: option.id } }),
+                                )
                               }
                             : undefined
                         }

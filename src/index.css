@@ -3677,3 +3677,119 @@ a.btn {
     opacity: 0;
   }
 }
+
+/* ---------- Manual: Paleta de cores (Figma node 6479:5557) ---------- */
+/* Intro: 20px regular, 578px wide, a blank line between the paragraphs. The title above has
+   the same 40px gap as on the Logo page; the intro starts 1px lower in Figma. */
+.manual-palette-intro {
+  width: 578px;
+  margin-top: 1px;
+  font-size: 20px;
+  font-weight: 400;
+  line-height: normal;
+  color: #5d5d5d;
+}
+
+.manual-palette-intro p {
+  margin: 0;
+}
+
+.manual-palette-intro p + p,
+.manual-p--spaced p + p {
+  margin-top: 1.21em;
+}
+
+/* Between the intro and the categories there are 80px; inside a category and between
+   categories and dividers, 40px. */
+.manual-palette-list {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  margin-top: 32px; /* the main column gap is 48 */
+}
+
+.manual-palette-section {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  scroll-margin-top: 48px;
+}
+
+.manual-palette-text {
+  width: 578px;
+}
+
+.manual-color {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+}
+
+.manual-color__swatches {
+  display: flex;
+  flex-direction: column;
+  height: 360px;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.manual-swatch {
+  position: relative;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: normal;
+  white-space: nowrap;
+}
+
+.manual-swatch--main {
+  flex: none;
+  height: 200px;
+  width: 100%;
+}
+
+/* The other tones share the full width in one row, whatever their number. */
+.manual-color__strip {
+  display: flex;
+  flex: 1 0 0;
+  min-height: 0;
+  width: 100%;
+}
+
+.manual-swatch--tone {
+  flex: 1 0 0;
+  min-width: 0;
+  height: 100%;
+}
+
+.manual-swatch__badge {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.manual-swatch__square {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+}
+
+.manual-swatch__rating {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  letter-spacing: -0.23px;
+}
+
+.manual-swatch__codes {
+  position: absolute;
+  bottom: 24px;
+  left: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
