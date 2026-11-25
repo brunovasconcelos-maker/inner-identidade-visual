@@ -37,20 +37,51 @@ export default function FontDetailsPanel({
     <aside className="viewer-panel" aria-label="Detalhes da tipografia">
       <div className="viewer-panel__content">
         <section className="vp-section">
+          <p className="panel-field__label">Tipografia</p>
+          <span className="info-chip info-chip--tall">{font.family}</span>
+        </section>
+
+        <section className="vp-section">
           <p className="panel-field__label">Tipo de tipografia</p>
-          <span className="info-chip">{type.label}</span>
+          <span className="info-chip info-chip--tall">{type.label}</span>
         </section>
 
         <div className="vp-row">
           <section className="vp-section vp-section--format">
             <p className="panel-field__label">Origem</p>
-            <span className="info-chip">{font.source === 'google' ? 'Google Fonts' : 'Upload'}</span>
+            <span className="info-chip info-chip--tall">{font.source === 'google' ? 'Google Fonts' : 'Upload'}</span>
           </section>
           <section className="vp-section vp-section--grow">
             <p className="panel-field__label">Pesos</p>
-            <span className="info-chip">{pesosLabel(font.selectedWeights.length)}</span>
+            <span className="info-chip info-chip--tall">{pesosLabel(font.selectedWeights.length)}</span>
           </section>
         </div>
+
+        <section className="vp-section">
+          <label className="panel-field__label" htmlFor="viewer-description">
+            Descrição
+          </label>
+          <textarea
+            id="viewer-description"
+            className="textarea textarea--viewer"
+            value={draft.description}
+            placeholder="Descreva essa tipografia"
+            onChange={(event) => patch({ description: event.target.value })}
+          />
+        </section>
+
+        <section className="vp-section">
+          <label className="panel-field__label" htmlFor="viewer-use-cases">
+            Casos de uso
+          </label>
+          <textarea
+            id="viewer-use-cases"
+            className="textarea textarea--viewer"
+            value={draft.useCases}
+            placeholder="Onde você pode usar essa tipografia"
+            onChange={(event) => patch({ useCases: event.target.value })}
+          />
+        </section>
 
         <div className="vp-divider" />
 
@@ -81,34 +112,6 @@ export default function FontDetailsPanel({
               )
             })}
           </div>
-        </section>
-
-        <div className="vp-divider" />
-
-        <section className="vp-section">
-          <label className="panel-field__label" htmlFor="viewer-description">
-            Descrição
-          </label>
-          <textarea
-            id="viewer-description"
-            className="textarea textarea--viewer"
-            value={draft.description}
-            placeholder="Descreva essa tipografia"
-            onChange={(event) => patch({ description: event.target.value })}
-          />
-        </section>
-
-        <section className="vp-section">
-          <label className="panel-field__label" htmlFor="viewer-use-cases">
-            Casos de uso
-          </label>
-          <textarea
-            id="viewer-use-cases"
-            className="textarea textarea--viewer"
-            value={draft.useCases}
-            placeholder="Onde você pode usar essa tipografia"
-            onChange={(event) => patch({ useCases: event.target.value })}
-          />
         </section>
 
         <div className="vp-divider" />

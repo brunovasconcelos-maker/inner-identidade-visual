@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { CaretLeft, CaretRight, DownloadSimple, Trash, X } from '@phosphor-icons/react'
+import { CaretDown, CaretLeft, CaretRight, DownloadSimple, Trash, X } from '@phosphor-icons/react'
 import ConfirmDialog from '../ConfirmDialog.jsx'
 import FontDetailsPanel from './FontDetailsPanel.jsx'
 import { heroWeight, selectedWeights } from '../../data/manualTypography.js'
@@ -7,8 +7,13 @@ import { sortWeights, styleName, weightKey } from '../../data/typography.js'
 import { downloadFamily } from '../../utils/fontDownload.js'
 import { useFontPreview } from '../../utils/fonts.js'
 
-export const SAMPLE_TEXT = 'A tipografia é a voz visual da marca.'
-export const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz 0123456789'
+// Lines of the specimen under the family and style names (Figma node 6519:17642).
+export const SPECIMEN_LINES = [
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+  'abcdefghijklmnopqrstuvwxyz',
+  '0123456789',
+  'ÁÉÍÓÚ ÂÊÔ ÃÕ Ç ! ? @ & % ( ) . , ; :',
+]
 
 function initialDraft(font, identity) {
   return {
@@ -36,6 +41,71 @@ function isDirty(draft, font) {
     !sameList(draft.tags, font.tags) ||
     !sameList(draft.usageRights, font.usageRights) ||
     !sameSet(draft.selectedWeights, font.selectedWeights)
+  )
+}
+
+// Weight dropdown at the top right of the card: the current style name and a list of the
+// selected weights and styles (the kebab menu styles, row hover included). Closes with Esc
+// (without closing the viewer), a click outside or a pick.
+function WeightDropdown({ weights, current, onPick }) {
+  const [open, setOpen] = useState(false)
+  const root = useRef(null)
+
+  useEffect(() => {
+    if (!open) return undefined
+    function onMouseDown(event) {
+      if (root.current && !root.current.contains(event.target)) setOpen(false)
+    }
+    function onKeyDown(event) {
+      if (event.key !== 'Escape') return
+      event.preventDefault()
+      event.stopPropagation()
+      setOpen(false)
+    }
+    document.addEventListener('mousedown', onMouseDown)
+    document.addEventListener('keydown', onKeyDown, true)
+    return () => {
+      document.removeEventListener('mousedown', onMouseDown)
+      document.removeEventListener('keydown', onKeyDown, true)
+    }
+  }, [open])
+
+  return (
+    <div className="fv-dropdown" ref={root}>
+      <button
+        type="button"
+        className="fv-dropdown__trigger"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label="Peso e estilo"
+        onClick={() => setOpen((value) => !value)}
+      >
+        <span className="fv-dropdown__label">{styleName(current.weight, current.italic)}</span>
+        <CaretDown size={20} color="#000000" weight="regular" />
+      </button>
+      {open ? (
+        <div className="logo-menu fv-dropdown__menu" role="listbox" aria-label="Pesos e estilos">
+          {weights.map((weight) => {
+            const selected = weightKey(weight) === weightKey(current)
+            return (
+              <button
+                key={weightKey(weight)}
+                type="button"
+                role="option"
+                aria-selected={selected}
+                className={`menu-row${selected ? ' menu-row--current' : ''}`}
+                onClick={() => {
+                  onPick(weight)
+                  setOpen(false)
+                }}
+              >
+                <span className="menu-row__label">{styleName(weight.weight, weight.italic)}</span>
+              </button>
+            )
+          })}
+        </div>
+      ) : null}
+    </div>
   )
 }
 
@@ -202,47 +272,36 @@ export default function FontViewer({ identity, fonts, fontId, deleteOpen, onChan
       </button>
 
       <div className="viewer__card viewer__card--font" data-weight={weightKey(featured)}>
-        <span className="fv-aa" style={style}>
-          Aa
-        </span>
-        <span className="fv-name" style={style}>
-          {font.family}
-        </span>
-        <span className="fv-sample" style={style}>
-          {SAMPLE_TEXT}
-        </span>
-        <span className="fv-alphabet" style={style}>
-          {ALPHABET}
-        </span>
+        <div className="fv-specimen" style={style}>
+          <span className="fv-line">{font.family}</span>
+          <span className="fv-line">{styleName(featured.weight, featured.italic)}</span>
+          <span className="fv-line fv-line--blank" aria-hidden="true" />
+          {SPECIMEN_LINES.map((line) => (
+            <span key={line} className="fv-line">
+              {line}
+            </span>
+          ))}
+        </div>
       </div>
 
-      <div className="viewer__actions">
+      <div className="viewer__actions viewer__actions--font">
         <button type="button" className="viewer__round" aria-label="Excluir" onClick={() => onDelete(font)}>
-          <Trash size={20} color="#5d5d5d" weight="regular" />
+          <Trash size={20} color="#000000" weight="regular" />
         </button>
         <span className="viewer__share">
           <button type="button" className="viewer__round" aria-label="Baixar" onClick={download}>
-            <DownloadSimple size={20} color="#5d5d5d" weight="regular" />
+            <DownloadSimple size={20} color="#000000" weight="regular" />
           </button>
           {downloadError ? <span className="tooltip">Não foi possível baixar</span> : null}
         </span>
       </div>
 
-      <div className="viewer__thumbs viewer__thumbs--chips">
-        {weights.map((weight) => {
-          const active = weightKey(weight) === weightKey(featured)
-          return (
-            <button
-              key={weightKey(weight)}
-              type="button"
-              className={`viewer__chip viewer__thumb${active ? ' viewer__thumb--active' : ''}`}
-              aria-pressed={active}
-              onClick={() => setFeaturedState({ fontId: font.id, key: weightKey(weight) })}
-            >
-              {styleName(weight.weight, weight.italic)}
-            </button>
-          )
-        })}
+      <div className="fv-dropdown-slot">
+        <WeightDropdown
+          weights={weights}
+          current={featured}
+          onPick={(weight) => setFeaturedState({ fontId: font.id, key: weightKey(weight) })}
+        />
       </div>
 
       {prev ? (

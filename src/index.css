@@ -4415,62 +4415,83 @@ a.btn {
   color: #5d5d5d;
 }
 
-/* ---------- Font viewer: same overlay, close button, arrows, actions and panel as the logo
-   viewer; the card is white and shows the font itself. ---------- */
+/* ---------- Font viewer (Figma nodes 6519:17389, 6519:17642, 6519:17795): the logo viewer
+   card with the font specimen, the delete and download buttons at its top left and the weight
+   dropdown at its top right. ---------- */
 .viewer__card--font {
+  display: block;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* 24px, tracking -1px, line height 1.7, centered; its top is 110px from the card top. */
+.fv-specimen {
+  position: absolute;
+  top: 110px;
+  right: 20px;
+  left: 20px;
+  display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 40px;
-  background: #ffffff;
+  align-items: center;
+  font-size: 24px;
+  line-height: 1.7;
+  letter-spacing: -1px;
   text-align: center;
   color: #000000;
 }
 
-.fv-aa {
-  font-size: 200px;
-  line-height: 1;
-  letter-spacing: -0.04em;
-}
-
-.fv-name {
-  font-size: 32px;
-  line-height: 1.1;
-  overflow-wrap: anywhere;
-}
-
-.fv-sample {
-  margin-top: 12px;
-  font-size: 18px;
-  line-height: 1.3;
-  color: #5d5d5d;
-}
-
-.fv-alphabet {
+.fv-line {
+  display: block;
   max-width: 100%;
-  font-size: 14px;
-  line-height: 1.4;
-  color: #5d5d5d;
   overflow-wrap: anywhere;
 }
 
-/* Weight chips: the position and active style of the logo thumbnails, with a label. */
-.viewer__chip {
+.fv-line--blank {
+  height: 1.7em;
+}
+
+/* Buttons and dropdown sit 20px inside the card. */
+.viewer__actions--font {
+  left: calc(var(--viewer-left) + 20px);
+  top: 138px;
+}
+
+.fv-dropdown-slot {
+  position: absolute;
+  top: 138px;
+  left: calc(var(--viewer-left) + 556px - 20px);
+  transform: translateX(-100%);
+}
+
+.fv-dropdown {
+  position: relative;
+}
+
+.fv-dropdown__trigger {
   display: flex;
-  flex: none;
   align-items: center;
-  justify-content: center;
-  height: 52px;
-  padding: 0 16px;
+  gap: 8px;
+  height: 40px;
+  padding: 10px 12px;
   border: 0;
   border-radius: 8px;
-  background: #f4f5f5;
+  background: #ffffff;
   font-size: 14px;
   font-weight: 500;
   line-height: 1.3;
   letter-spacing: -0.28px;
-  color: var(--text-default);
+  color: #000000;
   white-space: nowrap;
   cursor: pointer;
+}
+
+.fv-dropdown__menu {
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.menu-row--current {
+  background: var(--surface-hover);
 }
 
 .viewer__neighbor--font {
@@ -4484,7 +4505,16 @@ a.btn {
 }
 
 .weights-list--viewer {
-  padding: 4px 0 0;
+  padding: 12px 0;
+}
+
+/* Read only chips of the font panel: 40px tall, gray text (Figma node 6519:17795). */
+.info-chip--tall {
+  display: flex;
+  align-items: center;
+  height: 40px;
+  padding: 10px 12px;
+  color: var(--text-neutral);
 }
 
 /* ---------- Icon library viewer: the logo viewer card, white, full of icons. ---------- */
