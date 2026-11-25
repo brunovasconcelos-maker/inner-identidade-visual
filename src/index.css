@@ -4343,19 +4343,26 @@ a.btn {
 
 .lib-tile__icon {
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
   width: 100px;
   height: 100px;
   overflow: hidden;
+  border: 1px solid #dedede;
+  background: #ffffff;
   color: #000000;
+  transition: background-color 150ms ease;
 }
 
+/* The icon is 48px, centered in the 100px tile. */
 .lib-tile__svg,
 .lib-tile__img {
-  position: absolute;
-  inset: 0;
   display: block;
-  width: 100%;
-  height: 100%;
+  flex: none;
+  width: 48px;
+  height: 48px;
   object-fit: contain;
 }
 
@@ -4365,26 +4372,15 @@ a.btn {
   height: 100%;
 }
 
-/* Hover: gray overlay with a 1px border (inside the 100px square) and a white download button. */
-.lib-tile__icon::after {
-  position: absolute;
-  inset: 0;
-  background: rgba(244, 245, 245, 0.6);
-  box-shadow: inset 0 0 0 1px #dedede;
-  content: '';
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 150ms ease;
-}
-
-.lib-tile__icon:hover::after {
-  opacity: 1;
+/* Hover (Figma): gray fill and the white download button, both inside the 100px tile. */
+.lib-tile__icon:hover {
+  background: #f4f5f5;
 }
 
 .lib-tile__download {
   position: absolute;
-  top: 50%;
-  left: 50%;
+  top: 27px;
+  left: 24.29px;
   z-index: 1;
   display: flex;
   align-items: center;
@@ -4396,7 +4392,6 @@ a.btn {
   border-radius: 360px;
   background: #ffffff;
   opacity: 0;
-  transform: translate(-50%, -50%);
   cursor: pointer;
   transition: opacity 150ms ease;
 }
@@ -4406,77 +4401,16 @@ a.btn {
   opacity: 1;
 }
 
+/* Name under the tile: one line, ellipsis; the full name is the title attribute. */
 .lib-tile__name {
+  width: 100%;
   margin: 0;
+  overflow: hidden;
   font-size: 14px;
   font-weight: 400;
   line-height: normal;
   text-align: center;
-  color: #5d5d5d;
-  overflow-wrap: anywhere;
-}
-
-/* Swatches of the Paleta de cores page copy their hex on click (tooltip: see .cv-tooltip). */
-.manual-swatch--copy {
-  cursor: pointer;
-}
-
-/* Header logo of the sidebar: a link to Intro. */
-.manual-side__logo-link {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  height: 100%;
-  color: inherit;
-  text-decoration: none;
-}
-
-/* Previous / next navigation at the end of every page (Figma node 6498:8824). */
-.manual-pager {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 980px;
-  margin-top: 32px; /* 80px under the content: the main column gap is 48 */
-}
-
-.manual-pager__link {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-  padding: 8px 0;
-  color: inherit;
-  text-decoration: none;
-}
-
-.manual-pager__caret {
-  display: flex;
-  align-items: center;
-  padding: 8px;
-  border-radius: 16px;
-}
-
-.manual-pager__texts {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 12px;
-  font-size: 14px;
-  font-weight: 500;
-  line-height: normal;
+  text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.manual-pager__label {
   color: #5d5d5d;
-}
-
-.manual-pager__name {
-  color: #000000;
-  transition: color 150ms ease;
-}
-
-.manual-pager__link:hover .manual-pager__name,
-.manual-pager__link:focus-visible .manual-pager__name {
-  color: var(--manual-select-fg, #1a1a1a);
 }

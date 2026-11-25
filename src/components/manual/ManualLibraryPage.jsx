@@ -55,7 +55,9 @@ function OverviewTile({ name, children, onDownload }) {
           <DownloadSimple size={24} color="#000000" weight="regular" />
         </button>
       </div>
-      <p className="lib-tile__name">{name}</p>
+      <p className="lib-tile__name" title={name}>
+        {name}
+      </p>
     </div>
   )
 }
