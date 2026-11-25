@@ -1,3 +1,5 @@
+import { findLibrary } from '../icon-libraries/libraries.js'
+
 // Default texts of every logo type. They fill an empty description or
 // empty use cases, so the brand manual always has something to show (and the user can edit
 // it afterwards).
@@ -92,6 +94,29 @@ export function withDefaultIconTexts(icon, brandName) {
   }
 }
 
+// ---------- icon library ----------
+
+// Default description of the icon library of an identity (a free library or an uploaded one).
+export function defaultLibraryTexts(item, brandName) {
+  if (item.source === 'upload') {
+    return {
+      description: `${brandName} utiliza uma biblioteca de ícones própria, com ${item.iconCount} ícones exclusivos da marca. Todos os ícones das peças devem vir dessa biblioteca, para manter o traço, o peso e as proporções iguais em toda a comunicação.`,
+    }
+  }
+  const library = findLibrary(item.libraryId)
+  if (!library) return null
+  return {
+    description: `${brandName} utiliza a biblioteca ${library.name} no estilo ${item.style}. Todos os ícones das peças devem vir dessa biblioteca e desse estilo, para manter o traço, o peso e as proporções iguais em toda a comunicação.`,
+  }
+}
+
+// A library with its empty description filled, or the same object.
+export function withDefaultLibraryTexts(item, brandName) {
+  if (String(item.description || '').trim()) return item
+  const defaults = defaultLibraryTexts(item, brandName)
+  return defaults ? { ...item, description: defaults.description } : item
+}
+
 // A font with its empty description or use cases filled, or the same object.
 export function withDefaultFontTexts(font, brandName) {
   const defaults = defaultFontTexts(brandName, font.type)
@@ -124,14 +149,17 @@ export function withDefaultTextsInIdentity(identity) {
   const logos = identity.logos.map((logo) => withDefaultLogoTexts(logo, identity.name))
   const tipografia = identity.tipografia.map((font) => withDefaultFontTexts(font, identity.name))
   const icones = identity.icones.map((icon) => withDefaultIconTexts(icon, identity.name))
+  const bibliotecaDeIcones = identity.bibliotecaDeIcones.map((item) => withDefaultLibraryTexts(item, identity.name))
+  const libraryChanged = bibliotecaDeIcones.some((item, index) => item !== identity.bibliotecaDeIcones[index])
   const logosChanged = logos.some((logo, index) => logo !== identity.logos[index])
   const fontsChanged = tipografia.some((font, index) => font !== identity.tipografia[index])
   const iconsChanged = icones.some((icon, index) => icon !== identity.icones[index])
-  if (!logosChanged && !fontsChanged && !iconsChanged) return identity
+  if (!logosChanged && !fontsChanged && !iconsChanged && !libraryChanged) return identity
   return {
     ...identity,
     ...(logosChanged ? { logos } : {}),
     ...(fontsChanged ? { tipografia } : {}),
     ...(iconsChanged ? { icones } : {}),
+    ...(libraryChanged ? { bibliotecaDeIcones } : {}),
   }
 }

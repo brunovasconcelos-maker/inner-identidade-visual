@@ -4248,3 +4248,162 @@ a.btn {
   flex: none;
   width: auto;
 }
+
+/* ---------- Manual: Biblioteca de ícones (Figma node 6512:10627) ---------- */
+/* Between the intro, the hero block, the divider and the overview there are 80px (Figma). */
+.manual-lib {
+  display: flex;
+  flex-direction: column;
+  gap: 80px;
+  margin-top: 32px; /* 80px under the intro: the main column gap is 48 */
+}
+
+.manual-lib__top {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.lib-info {
+  margin-top: 0;
+}
+
+.lib-hero {
+  position: relative;
+  width: 100%;
+  height: 520px;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.lib-hero__grid {
+  position: absolute;
+  top: 16px;
+  left: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  align-items: center;
+  gap: 33.362px;
+  width: 980px;
+}
+
+.lib-hero .lib-glyph {
+  width: 53.379px;
+  height: 53.379px;
+}
+
+.lib-btn-busy {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lib-spin {
+  animation: lib-spin 800ms linear infinite;
+}
+
+@keyframes lib-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.manual-btn:disabled {
+  cursor: progress;
+}
+
+.lib-overview {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.lib-overview__grid {
+  display: grid;
+  grid-template-columns: repeat(8, 100px);
+  justify-content: space-between;
+  row-gap: 40px;
+}
+
+.lib-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100px;
+}
+
+.lib-tile__icon {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  overflow: hidden;
+  color: #000000;
+}
+
+.lib-tile__svg,
+.lib-tile__img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.lib-tile__svg svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Hover: gray overlay with a 1px border (inside the 100px square) and a white download button. */
+.lib-tile__icon::after {
+  position: absolute;
+  inset: 0;
+  background: rgba(244, 245, 245, 0.6);
+  box-shadow: inset 0 0 0 1px #dedede;
+  content: '';
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 150ms ease;
+}
+
+.lib-tile__icon:hover::after {
+  opacity: 1;
+}
+
+.lib-tile__download {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 49px;
+  height: 48px;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 360px;
+  background: #ffffff;
+  opacity: 0;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  transition: opacity 150ms ease;
+}
+
+.lib-tile__icon:hover .lib-tile__download,
+.lib-tile__download:focus-visible {
+  opacity: 1;
+}
+
+.lib-tile__name {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: normal;
+  text-align: center;
+  color: #5d5d5d;
+  overflow-wrap: anywhere;
+}

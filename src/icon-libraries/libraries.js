@@ -94,7 +94,7 @@ export const libraryUrl = (library) => `https://${library.site}`
 export const everydayIcons = (library) => ICON_NAMES[library.id].slice(0, EVERYDAY_COUNT)
 export const iconPool = (library) => ICON_NAMES[library.id]
 
-function normalizeSvg(raw) {
+export function normalizeSvg(raw) {
   return raw
     .replace(/<!--[\s\S]*?-->/g, '')
     .replace(/<svg\b([^>]*)>/, (match, attrs) => {

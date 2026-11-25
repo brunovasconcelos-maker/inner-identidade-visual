@@ -11,6 +11,7 @@ import { deleteIdentityRecord, loadAllIdentities, saveIdentities, saveIdentity }
 import {
   withDefaultFontTexts,
   withDefaultIconTexts,
+  withDefaultLibraryTexts,
   withDefaultLogoTexts,
   withDefaultTextsInIdentity,
 } from './defaultTexts.js'
@@ -150,6 +151,7 @@ export function IdentitiesProvider({ children }) {
     if (key === 'logos') logo = withDefaultLogoTexts(logo, current.name)
     if (key === 'tipografia') logo = withDefaultFontTexts(logo, current.name)
     if (key === 'icones') logo = withDefaultIconTexts(logo, current.name)
+    if (key === 'bibliotecaDeIcones') logo = withDefaultLibraryTexts(logo, current.name)
     const known = new Set(current.customUsageRights.map((right) => right.toLowerCase()))
     const added = customRights.filter((right) => !known.has(right.toLowerCase()))
     const next = {
@@ -194,6 +196,7 @@ export function IdentitiesProvider({ children }) {
         if (key === 'logos') return withDefaultLogoTexts(updated, current.name)
         if (key === 'tipografia') return withDefaultFontTexts(updated, current.name)
         if (key === 'icones') return withDefaultIconTexts(updated, current.name)
+        if (key === 'bibliotecaDeIcones') return withDefaultLibraryTexts(updated, current.name)
         return updated
       }),
       customUsageRights: [...current.customUsageRights, ...added],

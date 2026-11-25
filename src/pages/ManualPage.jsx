@@ -3,6 +3,7 @@ import { DotsThreeVertical } from '@phosphor-icons/react'
 import ManualSidebar from '../components/manual/ManualSidebar.jsx'
 import ManualLogoPage from '../components/manual/ManualLogoPage.jsx'
 import ManualIconPage from '../components/manual/ManualIconPage.jsx'
+import ManualLibraryPage from '../components/manual/ManualLibraryPage.jsx'
 import ManualPalettePage from '../components/manual/ManualPalettePage.jsx'
 import ManualTypographyPage from '../components/manual/ManualTypographyPage.jsx'
 import { useIdentities } from '../data/identities.jsx'
@@ -57,6 +58,7 @@ export default function ManualPage() {
         <h1 className="manual-title">{meta.label}</h1>
         {section === 'logo' ? <ManualLogoPage identity={identity} sub={sub} /> : null}
         {section === 'icone' ? <ManualIconPage identity={identity} /> : null}
+        {section === 'biblioteca-de-icones' ? <ManualLibraryPage identity={identity} /> : null}
         {section === 'paleta-de-cores' ? <ManualPalettePage identity={identity} sub={sub} /> : null}
         {section === 'tipografia' ? <ManualTypographyPage identity={identity} sub={sub} /> : null}
       </main>
