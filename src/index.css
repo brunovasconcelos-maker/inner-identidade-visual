@@ -3679,22 +3679,24 @@ a.btn {
 }
 
 /* ---------- Manual: Paleta de cores (Figma node 6479:5557) ---------- */
-/* Intro: 20px regular, 578px wide, a blank line between the paragraphs. The title above has
-   the same 40px gap as on the Logo page; the intro starts 1px lower in Figma. */
-.manual-palette-intro {
+/* Intro text right below a page title of the manual. Shared by every page that has one:
+   16px regular, line-height "normal" (the same ratio as before, so it scales with the size),
+   578px wide, a blank line (1.21em) between paragraphs. It starts 1px lower than the gap
+   under the title, as in Figma. */
+.manual-intro {
   width: 578px;
   margin-top: 1px;
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 400;
   line-height: normal;
   color: #5d5d5d;
 }
 
-.manual-palette-intro p {
+.manual-intro p {
   margin: 0;
 }
 
-.manual-palette-intro p + p,
+.manual-intro p + p,
 .manual-p--spaced p + p {
   margin-top: 1.21em;
 }

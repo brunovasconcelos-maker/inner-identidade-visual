@@ -54,7 +54,7 @@ export default function ManualPalettePage({ identity, sub }) {
   const marca = identity.name
   return (
     <>
-      <div className="manual-palette-intro">
+      <div className="manual-intro">
         {PALETTE_INTRO(marca).map((text) => (
           <p key={text}>{text}</p>
         ))}
