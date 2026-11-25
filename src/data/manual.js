@@ -55,6 +55,12 @@ export function subOptions(slug, identity) {
   return []
 }
 
+// Intro text of the Logo page, under the title.
+export const LOGO_INTRO = (marca) => [
+  `A logo é a assinatura de ${marca} e o elemento mais importante da identidade visual. Cada versão foi pensada para um tipo de espaço e aplicação, garantindo leitura e reconhecimento em qualquer formato.`,
+  'Use sempre os arquivos originais deste manual e escolha a versão que melhor se encaixa na peça. Respeitar as variantes, a área de proteção e os usos corretos mantém a marca forte e consistente.',
+]
+
 export function manualPath(identityId, slug, sub) {
   const base = `/manual/${identityId}`
   if (!slug || slug === 'intro') return base

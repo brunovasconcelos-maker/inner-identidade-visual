@@ -3293,7 +3293,8 @@ a.btn {
 .manual-block--info {
   justify-content: space-between;
   align-items: flex-start;
-  margin-top: -8px;
+  /* 80px under the hero (Figma): the 40px section gap plus this. */
+  margin-top: 40px;
 }
 
 .manual-block--row {
@@ -3330,7 +3331,7 @@ a.btn {
 }
 
 .manual-text-block--wide {
-  width: 560px;
+  width: 578px;
 }
 
 .manual-text-block--narrow {
@@ -3461,12 +3462,13 @@ a.btn {
   display: flex;
   flex-direction: column;
   gap: 160px;
+  margin-top: 32px; /* 80px under the intro: the main column gap is 48 */
 }
 
 .manual-logo-section {
   display: flex;
   flex-direction: column;
-  gap: 48px;
+  gap: 40px;
   scroll-margin-top: 48px;
 }
 
