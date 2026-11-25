@@ -6,12 +6,13 @@ import { CATEGORIES, nextExtraStep, sortTones, toneHex } from '../../data/palett
 
 const toneKey = (tones) => JSON.stringify(sortTones(tones).map((tone) => [tone.step, tone.hex]))
 
-function initialDraft(color) {
-  return { useCases: color.useCases || '', tones: sortTones(color.tones) }
+// The text is the one of the color's category, shared by all its colors.
+function initialDraft(color, text) {
+  return { text, tones: sortTones(color.tones) }
 }
 
-function isDirty(draft, color) {
-  return draft.useCases !== (color.useCases || '') || toneKey(draft.tones) !== toneKey(color.tones)
+function isDirty(draft, color, text) {
+  return draft.text !== text || toneKey(draft.tones) !== toneKey(color.tones)
 }
 
 // Mini version of the featured card, shown on the sides: main color and tone strip.
@@ -42,6 +43,7 @@ function Neighbor({ color, side, onOpen }) {
 export default function ColorViewer({
   colors,
   colorId,
+  categoryTextOf,
   deleteOpen,
   onChangeColor,
   onClose,
@@ -63,16 +65,17 @@ export default function ColorViewer({
 
   useEffect(() => () => clearTimeout(copyTimer.current), [])
 
+  const savedText = color ? categoryTextOf(color.category) : ''
   const draft = color
     ? draftState && draftState.colorId === color.id
       ? draftState.values
-      : initialDraft(color)
+      : initialDraft(color, savedText)
     : null
-  const dirty = color ? isDirty(draft, color) : false
+  const dirty = color ? isDirty(draft, color, savedText) : false
 
   function setDraft(update) {
     setDraftState((current) => {
-      const base = current && current.colorId === color.id ? current.values : initialDraft(color)
+      const base = current && current.colorId === color.id ? current.values : initialDraft(color, savedText)
       return { colorId: color.id, values: update(base) }
     })
     setSaveError(null)
@@ -96,7 +99,12 @@ export default function ColorViewer({
     setSaving(true)
     setSaveError(null)
     try {
-      await onUpdate(color.id, { useCases: draft.useCases, tones: sortTones(draft.tones) })
+      // The text belongs to the category: saving it changes it for every color of it.
+      await onUpdate(
+        color.id,
+        { tones: sortTones(draft.tones) },
+        draft.text !== savedText ? { category: color.category, value: draft.text } : null,
+      )
       setDraftState(null)
     } catch (error) {
       console.error('Could not save', error)
@@ -253,9 +261,9 @@ export default function ColorViewer({
             <textarea
               id="viewer-color-use-cases"
               className="textarea textarea--viewer"
-              value={draft.useCases}
+              value={draft.text}
               placeholder="Onde você pode usar essa cor"
-              onChange={(event) => setDraft((current) => ({ ...current, useCases: event.target.value }))}
+              onChange={(event) => setDraft((current) => ({ ...current, text: event.target.value }))}
             />
           </section>
 

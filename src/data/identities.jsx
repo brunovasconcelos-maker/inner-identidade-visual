@@ -9,6 +9,7 @@ import {
 } from 'react'
 import { deleteIdentityRecord, loadAllIdentities, saveIdentities, saveIdentity } from '../storage/db.js'
 import { withDefaultLogoTexts, withDefaultTextsInIdentity } from './defaultTexts.js'
+import { emptyPaletteTexts, storedCategoryText } from './paletteTexts.js'
 
 // Persistence moved from localStorage to IndexedDB. This is the old key, read once
 // to migrate existing identities.
@@ -40,7 +41,18 @@ function migrate(identity) {
   }
   // Custom usage rights created by the user, shared by every logo of the identity.
   if (!Array.isArray(next.customUsageRights)) next.customUsageRights = []
+  // One text per palette category (null = default), shared by the colors of the category.
+  next.paletteTexts = { ...emptyPaletteTexts(), ...(identity.paletteTexts || {}) }
+  // The per color "useCases" field is gone: those values are discarded.
+  if (next.paleta.some((color) => 'useCases' in color)) {
+    next.paleta = next.paleta.map(({ useCases: discarded, ...color }) => color) // eslint-disable-line no-unused-vars
+  }
   return next
+}
+
+// True for a stored identity that the migration above changes, so it is saved again.
+function needsMigration(raw) {
+  return !raw.paletteTexts || (Array.isArray(raw.paleta) && raw.paleta.some((color) => 'useCases' in color))
 }
 
 function readLegacy() {
@@ -63,10 +75,12 @@ function removeLegacy() {
 
 async function loadInitial() {
   try {
-    const migrated = (await loadAllIdentities()).map(migrate)
-    // One time migration: principal logos with empty texts get the default ones.
+    const raw = await loadAllIdentities()
+    const migrated = raw.map(migrate)
+    // One time migrations: logos with empty texts get the default ones, palette texts are
+    // added and the per color use cases are dropped.
     const stored = migrated.map(withDefaultTextsInIdentity)
-    const changed = stored.filter((identity, index) => identity !== migrated[index])
+    const changed = stored.filter((identity, index) => identity !== migrated[index] || needsMigration(raw[index]))
     if (changed.length > 0) await saveIdentities(changed)
     if (stored.length > 0) return stored
     const legacy = readLegacy()
@@ -115,6 +129,7 @@ export function IdentitiesProvider({ children }) {
       logo: null,
       cover: null,
       customUsageRights: [],
+      paletteTexts: emptyPaletteTexts(),
       ...emptyFolders(),
     }
     setState((current) => ({ ...current, identities: [...current.identities, identity] }))
@@ -181,6 +196,27 @@ export function IdentitiesProvider({ children }) {
     return next
   }, [])
 
+  // Saves the tones of a palette color and, in the same write, the text of its category
+  // (`text` = { category, value } or null). An empty value, or one equal to the default,
+  // is stored as null so the default comes back. Rejects if it could not be persisted.
+  const updatePaletteColor = useCallback(async (identityId, colorId, changes, text = null) => {
+    const current = identitiesRef.current.find((item) => item.id === identityId)
+    if (!current) throw new Error('Identity not found')
+    const next = {
+      ...current,
+      paleta: current.paleta.map((color) => (color.id === colorId ? { ...color, ...changes } : color)),
+      paletteTexts: text
+        ? { ...current.paletteTexts, [text.category]: storedCategoryText(current, text.category, text.value) }
+        : current.paletteTexts,
+    }
+    await saveIdentity(next)
+    setState((s) => ({
+      ...s,
+      identities: s.identities.map((item) => (item.id === identityId ? next : item)),
+    }))
+    return next
+  }, [])
+
   // Deletes logos. Rejects if the change could not be persisted.
   const deleteLogos = useCallback(async (identityId, logoIds, key = 'logos') => {
     const current = identitiesRef.current.find((item) => item.id === identityId)
@@ -237,9 +273,10 @@ export function IdentitiesProvider({ children }) {
       addLogo,
       addItems,
       updateLogo,
+      updatePaletteColor,
       deleteLogos,
     }),
-    [state, createIdentity, duplicateIdentity, deleteIdentity, addLogo, addItems, updateLogo, deleteLogos],
+    [state, createIdentity, duplicateIdentity, deleteIdentity, addLogo, addItems, updateLogo, updatePaletteColor, deleteLogos],
   )
 
   return <IdentitiesContext.Provider value={value}>{children}</IdentitiesContext.Provider>

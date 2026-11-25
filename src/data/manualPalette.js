@@ -56,26 +56,10 @@ export const PALETTE_INTRO = (marca) => [
   'Use as cores sempre a partir dos códigos deste manual. Pequenas variações de tom, mesmo que pareçam iguais, enfraquecem o reconhecimento da marca ao longo do tempo.',
 ]
 
-export const CATEGORY_TEXTS = {
-  marca: {
-    title: 'Cor da marca',
-    paragraphs: (marca) => [
-      `A cor da marca é a que mais representa ${marca} à primeira vista. É ela que as pessoas associam à marca, mesmo antes de ler o nome ou ver a logo.`,
-      'Use em destaque nos pontos de maior impacto, como fundos de capa, botões principais, chamadas e elementos de assinatura. Para manter a força, evite dividir esse protagonismo com outras cores intensas na mesma peça.',
-    ],
-  },
-  primaria: {
-    title: 'Paleta primária',
-    paragraphs: (marca) => [
-      `As cores primárias são a base visual de ${marca} e aparecem na maior parte das peças. Elas sustentam a identidade no dia a dia, em layouts, textos, fundos e composições.`,
-      'Combine as cores primárias com a cor da marca para criar peças consistentes. Elas devem ocupar a maior parte da área das composições, deixando a cor da marca para os pontos de destaque.',
-    ],
-  },
-  secundaria: {
-    title: 'Paleta secundária',
-    paragraphs: (marca) => [
-      `As cores secundárias são cores de apoio, criadas para dar variedade sem perder a identidade de ${marca}. Elas ajudam a diferenciar temas, campanhas, categorias e informações.`,
-      'Use em detalhes, ilustrações, gráficos e elementos de apoio, sempre em menor proporção que as cores primárias. Elas complementam a paleta, mas nunca substituem a cor da marca como protagonista.',
-    ],
-  },
+// Titles of the category texts of the manual (the texts themselves are editable, see
+// paletteTexts.js).
+export const CATEGORY_TITLES = {
+  marca: 'Cor da marca',
+  primaria: 'Paleta primária',
+  secundaria: 'Paleta secundária',
 }

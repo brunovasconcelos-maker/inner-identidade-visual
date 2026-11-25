@@ -1,6 +1,7 @@
 import ManualScrollSections from './ManualScrollSections.jsx'
+import { categoryText, paragraphsOf } from '../../data/paletteTexts.js'
 import {
-  CATEGORY_TEXTS,
+  CATEGORY_TITLES,
   PALETTE_INTRO,
   colorsOfCategory,
   inkFor,
@@ -73,9 +74,9 @@ export default function ManualPalettePage({ identity, sub }) {
               <ColorBlock key={color.id} color={color} />
             ))}
             <div className="manual-text-block manual-palette-text">
-              <h2 className="manual-h2">{CATEGORY_TEXTS[category].title}</h2>
+              <h2 className="manual-h2">{CATEGORY_TITLES[category]}</h2>
               <div className="manual-p manual-p--spaced">
-                {CATEGORY_TEXTS[category].paragraphs(marca).map((text) => (
+                {paragraphsOf(categoryText(identity, category)).map((text) => (
                   <p key={text}>{text}</p>
                 ))}
               </div>

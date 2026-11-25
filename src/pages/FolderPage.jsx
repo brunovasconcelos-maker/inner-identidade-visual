@@ -17,6 +17,7 @@ import NewPaletteModal from '../components/palette/NewPaletteModal.jsx'
 import GeneratePaletteModal from '../components/palette/GeneratePaletteModal.jsx'
 import GeneratingCard from '../components/palette/GeneratingCard.jsx'
 import { newId } from '../data/identities.jsx'
+import { categoryText } from '../data/paletteTexts.js'
 import { generatePaletteColors } from '../data/colorGeneration.js'
 import NewLogoModal from '../components/logo/NewLogoModal.jsx'
 import SelectionBar from '../components/logo/SelectionBar.jsx'
@@ -49,7 +50,7 @@ function logoMatches(logo, label, term, searchFormat) {
 
 export default function FolderPage() {
   const { id, section } = useParams()
-  const { identities, loading, addLogo, addItems, updateLogo, deleteLogos } = useIdentities()
+  const { identities, loading, addLogo, addItems, updateLogo, updatePaletteColor, deleteLogos } = useIdentities()
   const identity = identities.find((item) => item.id === id)
   const folder = findFolder(section)
 
@@ -235,7 +236,6 @@ export default function FolderPage() {
               name: color.name,
               hex: color.hex,
               tones: generateTones(color.hex),
-              useCases: '',
               createdAt: new Date().toISOString(),
             },
           ],
@@ -519,7 +519,8 @@ export default function FolderPage() {
           onChangeColor={setViewerId}
           onClose={() => setViewerId(null)}
           onDelete={(color) => setDeleteTarget([color.id])}
-          onUpdate={(colorId, changes) => updateLogo(identity.id, colorId, changes, [], 'paleta')}
+          categoryTextOf={(category) => categoryText(identity, category)}
+          onUpdate={(colorId, changes, text) => updatePaletteColor(identity.id, colorId, changes, text)}
         />
       ) : null}
 
