@@ -1,5 +1,6 @@
 import { ICON_NAMES, EVERYDAY_COUNT } from './names.js'
 import { STYLE_LOADERS } from './loaders.js'
+import { ICON_COUNTS } from './counts.js'
 
 // The five free icon libraries of the "Biblioteca de ícones" folder. Colors are the card
 // tints of Figma (nodes 6512:11836): background, text and icon color.
@@ -120,3 +121,6 @@ export function loadLibraryStyle(library, styleLabel) {
   }
   return cache.get(key)
 }
+
+// Total number of icons of a library in a style.
+export const iconCount = (library, styleLabel) => ICON_COUNTS[`${library.id}:${styleIdOf(library, styleLabel)}`] || 0

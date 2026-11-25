@@ -11,6 +11,7 @@ import LogoViewer from '../components/logo/LogoViewer.jsx'
 import LogoCard from '../components/logo/LogoCard.jsx'
 import ColorCard from '../components/palette/ColorCard.jsx'
 import LibraryAddCard from '../components/library/LibraryAddCard.jsx'
+import LibraryViewer from '../components/library/LibraryViewer.jsx'
 import LibraryCard from '../components/library/LibraryCard.jsx'
 import NewLibraryModal from '../components/library/NewLibraryModal.jsx'
 import FontCard from '../components/typography/FontCard.jsx'
@@ -350,6 +351,7 @@ export default function FolderPage() {
     setMenuLogoId(null)
     if (action === 'download') downloadLibrary(item)
     else if (action === 'delete') setDeleteTarget([item.id])
+    else if (action === 'edit') setViewerId(item.id)
   }
 
   // Google fonts have no files: "Baixar" opens the family page in a new tab. Uploaded fonts
@@ -536,6 +538,7 @@ export default function FolderPage() {
                 onOpenMenu={setMenuLogoId}
                 onCloseMenu={closeMenu}
                 onAction={handleLibraryAction}
+                onOpen={setViewerId}
               />
             ))}
             {visibleFonts.map((font) => (
@@ -621,6 +624,17 @@ export default function FolderPage() {
           onClose={() => setViewerId(null)}
           onDelete={(font) => setDeleteTarget([font.id])}
           onUpdate={(fontId, changes, rights) => updateLogo(identity.id, fontId, changes, rights, 'tipografia')}
+        />
+      ) : null}
+
+      {viewerId && isLibrary && identity.bibliotecaDeIcones.find((item) => item.id === viewerId) ? (
+        <LibraryViewer
+          identity={identity}
+          item={identity.bibliotecaDeIcones.find((item) => item.id === viewerId)}
+          deleteOpen={Boolean(deleteTarget)}
+          onClose={() => setViewerId(null)}
+          onDelete={(item) => setDeleteTarget([item.id])}
+          onUpdate={(itemId, changes, rights) => updateLogo(identity.id, itemId, changes, rights, 'bibliotecaDeIcones')}
         />
       ) : null}
 

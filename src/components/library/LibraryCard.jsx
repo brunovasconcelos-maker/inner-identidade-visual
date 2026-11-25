@@ -1,16 +1,17 @@
 import { useEffect, useRef } from 'react'
-import { CheckSquare, DotsThreeVertical, DownloadSimple, Square, Trash } from '@phosphor-icons/react'
+import { CheckSquare, DotsThreeVertical, DownloadSimple, PencilSimple, Square, Trash } from '@phosphor-icons/react'
 import { findLibrary } from '../../icon-libraries/libraries.js'
 import LibraryPattern from './LibraryPattern.jsx'
 
 const MENU_ITEMS = [
+  { action: 'edit', label: 'Editar', Icon: PencilSimple },
   { action: 'download', label: 'Baixar', Icon: DownloadSimple },
   { action: 'delete', label: 'Excluir', Icon: Trash },
 ]
 
 // Card of the library of an identity (Figma node 6512:13402): the icon pattern in the chosen
 // style (or the icons of the uploaded .zip), the name and, below it, the style or the icon
-// count. Hover, checkbox, kebab and selection follow the other cards. Clicking does nothing yet.
+// count. Hover, checkbox, kebab and selection follow the other cards. Clicking opens the viewer.
 export default function LibraryCard({
   item,
   selected,
@@ -20,6 +21,7 @@ export default function LibraryCard({
   onOpenMenu,
   onCloseMenu,
   onAction,
+  onOpen,
 }) {
   const kebabRef = useRef(null)
   const library = item.source === 'library' ? findLibrary(item.libraryId) : null
@@ -57,7 +59,19 @@ export default function LibraryCard({
   return (
     <div className={classes}>
       <div className="logo-card__top">
-        <div className="logo-card__preview">
+        <div
+          className="logo-card__preview"
+          role="button"
+          tabIndex={0}
+          aria-label={`Abrir ${item.name}`}
+          onClick={() => onOpen(item.id)}
+          onKeyDown={(event) => {
+            if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
+              event.preventDefault()
+              onOpen(item.id)
+            }
+          }}
+        >
           <div className="lib-item__clip">
             <LibraryPattern library={library} style={item.style} file={library ? null : item.file} />
           </div>

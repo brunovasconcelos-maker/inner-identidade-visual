@@ -4486,3 +4486,20 @@ a.btn {
 .weights-list--viewer {
   padding: 4px 0 0;
 }
+
+/* ---------- Icon library viewer: the logo viewer card, white, full of icons. ---------- */
+.viewer__card--library {
+  background: #ffffff;
+}
+
+.fv-lib-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 48px);
+  gap: 22px;
+  color: #1a1a1a;
+}
+
+.fv-lib-grid .lib-glyph {
+  width: 48px;
+  height: 48px;
+}
