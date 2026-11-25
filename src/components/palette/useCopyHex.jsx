@@ -46,5 +46,5 @@ export function useCopyHex() {
     </div>
   ) : null
 
-  return { area, tooltip }
+  return { area, tooltip, clear: () => setHover(null) }
 }

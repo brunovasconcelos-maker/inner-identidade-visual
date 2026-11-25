@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { CircleNotch, DownloadSimple, Trash, ArrowSquareOut, X } from '@phosphor-icons/react'
+import { X } from '@phosphor-icons/react'
+import ViewerActions from '../viewer/ViewerActions.jsx'
 import ConfirmDialog from '../ConfirmDialog.jsx'
 import LibraryDetailsPanel from './LibraryDetailsPanel.jsx'
 import ZipGlyphs from './ZipGlyphs.jsx'
 import LibraryGlyphs from '../../icon-libraries/LibraryGlyphs.jsx'
-import { findLibrary, iconCount, iconPool, libraryUrl } from '../../icon-libraries/libraries.js'
+import { findLibrary, iconCount, iconPool } from '../../icon-libraries/libraries.js'
 import { saveBlob } from '../../utils/download.js'
 import { buildLibraryZip } from '../../utils/libraryZip.js'
 
@@ -157,35 +158,7 @@ export default function LibraryViewer({ identity, item, deleteOpen, onClose, onD
         </div>
       </div>
 
-      <div className="viewer__actions">
-        <button type="button" className="viewer__round" aria-label="Excluir" onClick={() => onDelete(item)}>
-          <Trash size={20} color="#5d5d5d" weight="regular" />
-        </button>
-        <button
-          type="button"
-          className="viewer__round"
-          aria-label="Baixar"
-          aria-busy={building}
-          disabled={building}
-          onClick={download}
-        >
-          {building ? (
-            <CircleNotch className="lib-spin" size={20} color="#5d5d5d" weight="bold" />
-          ) : (
-            <DownloadSimple size={20} color="#5d5d5d" weight="regular" />
-          )}
-        </button>
-        {isUpload ? null : (
-          <button
-            type="button"
-            className="viewer__round"
-            aria-label={`Abrir o site da ${library.name}`}
-            onClick={() => window.open(libraryUrl(library), '_blank', 'noopener')}
-          >
-            <ArrowSquareOut size={20} color="#5d5d5d" weight="regular" />
-          </button>
-        )}
-      </div>
+      <ViewerActions onDelete={() => onDelete(item)} onDownload={download} downloadBusy={building} />
 
       <LibraryDetailsPanel
         item={item}
@@ -200,6 +173,7 @@ export default function LibraryViewer({ identity, item, deleteOpen, onClose, onD
         onCancel={() => {
           setDraftState(null)
           setSaveError(null)
+          onClose()
         }}
       />
 

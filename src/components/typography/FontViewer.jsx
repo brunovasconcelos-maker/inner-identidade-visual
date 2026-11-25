@@ -340,10 +340,7 @@ export default function FontViewer({ identity, fonts, fontId, deleteOpen, onChan
         saving={saving}
         saveError={saveError}
         onSave={save}
-        onCancel={() => {
-          setDraftState(null)
-          setSaveError(null)
-        }}
+        onCancel={() => go({ type: 'close' })}
       />
 
       {pending ? (

@@ -60,7 +60,7 @@ export default function ColorViewer({
   const [pending, setPending] = useState(null) // action waiting for the discard dialog
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState(null)
-  const { area, tooltip } = useCopyHex()
+  const { area, tooltip, clear: clearTooltip } = useCopyHex()
 
   const savedText = color ? categoryTextOf(color.category) : ''
   const draft = color
@@ -82,7 +82,7 @@ export default function ColorViewer({
     setDraftState(null)
     setSaveError(null)
     setPending(null)
-    setHover(null)
+    clearTooltip()
     if (action.type === 'close') onClose()
     else onChangeColor(action.id)
   }
@@ -285,10 +285,7 @@ export default function ColorViewer({
             type="button"
             className="btn btn--ghost"
             disabled={saving}
-            onClick={() => {
-              setDraftState(null)
-              setSaveError(null)
-            }}
+            onClick={() => go({ type: 'close' })}
           >
             <span className="btn__label">Cancelar</span>
           </button>

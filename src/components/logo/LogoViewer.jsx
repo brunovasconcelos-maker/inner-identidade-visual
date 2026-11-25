@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { CaretLeft, CaretRight, DownloadSimple, Share, Trash, X } from '@phosphor-icons/react'
+import { CaretLeft, CaretRight, X } from '@phosphor-icons/react'
+import ViewerActions from '../viewer/ViewerActions.jsx'
 import ConfirmDialog from '../ConfirmDialog.jsx'
 import LogoDetailsPanel from './LogoDetailsPanel.jsx'
 import { ASSET_KINDS } from '../../data/assetKinds.js'
@@ -227,20 +228,12 @@ export default function LogoViewer({
         ) : null}
       </div>
 
-      <div className="viewer__actions">
-        <button type="button" className="viewer__round" aria-label="Excluir" onClick={() => onDelete(logo)}>
-          <Trash size={20} color="#5d5d5d" weight="regular" />
-        </button>
-        <span className="viewer__share">
-          <button type="button" className="viewer__round" aria-label="Compartilhar" onClick={onShare}>
-            <Share size={20} color="#5d5d5d" weight="regular" />
-          </button>
-          {shareTip ? <span className="tooltip">Em breve</span> : null}
-        </span>
-        <button type="button" className="viewer__round" aria-label="Baixar" onClick={() => saveBlob(featuredFile, featuredName)}>
-          <DownloadSimple size={20} color="#5d5d5d" weight="regular" />
-        </button>
-      </div>
+      <ViewerActions
+        onDelete={() => onDelete(logo)}
+        onShare={onShare}
+        shareTip={shareTip}
+        onDownload={() => saveBlob(featuredFile, featuredName)}
+      />
 
       {monoVersions.length > 0 ? (
         <div className="viewer__thumbs">
@@ -303,10 +296,7 @@ export default function LogoViewer({
         saving={saving}
         saveError={saveError}
         onSave={save}
-        onCancel={() => {
-          setDraftState(null)
-          setSaveError(null)
-        }}
+        onCancel={() => go({ type: 'close' })}
       />
 
       {pending ? (
