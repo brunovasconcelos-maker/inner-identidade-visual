@@ -10,6 +10,9 @@ import ConfirmDialog from '../components/ConfirmDialog.jsx'
 import LogoViewer from '../components/logo/LogoViewer.jsx'
 import LogoCard from '../components/logo/LogoCard.jsx'
 import ColorCard from '../components/palette/ColorCard.jsx'
+import LibraryAddCard from '../components/library/LibraryAddCard.jsx'
+import LibraryCard from '../components/library/LibraryCard.jsx'
+import NewLibraryModal from '../components/library/NewLibraryModal.jsx'
 import FontCard from '../components/typography/FontCard.jsx'
 import TypeChooserModal from '../components/TypeChooserModal.jsx'
 import NewFontModal from '../components/typography/NewFontModal.jsx'
@@ -37,7 +40,9 @@ import {
   validateElementFile,
   validateImageFile,
 } from '../utils/files.js'
-import { downloadFonts, downloadLogos } from '../utils/download.js'
+import { downloadFonts, downloadLogos, saveBlob } from '../utils/download.js'
+import { readIconZip } from '../utils/iconZip.js'
+import { ICON_LIBRARIES, findLibrary, libraryUrl } from '../icon-libraries/libraries.js'
 import { FONT_ACCEPT, readFontUpload, validateFontFile } from '../utils/fontFiles.js'
 
 // The search filters logo cards by type name and tags (case and accent insensitive).
@@ -70,6 +75,7 @@ export default function FolderPage() {
   const [generateOpen, setGenerateOpen] = useState(false) // "Gerar paleta" modal
   const [pending, setPending] = useState([]) // colors being generated: [{ id, category }]
   const [fontModal, setFontModal] = useState(null) // "Nova tipografia": { mode, type, font }
+  const [libraryModal, setLibraryModal] = useState(null) // "Nova biblioteca": { mode, libraryId | file, name, count }
   const [chooser, setChooser] = useState(null) // type chooser: 'logo' | 'font-upload' | 'font-google'
   const shareTimer = useRef(null)
 
@@ -77,6 +83,7 @@ export default function FolderPage() {
   const kind = kindForSection(section)
   const isPalette = section === 'paleta-de-cores'
   const isTypo = section === 'tipografia'
+  const isLibrary = section === 'biblioteca-de-icones'
   const items = identity && folder ? identity[folder.key] : []
   const logos = useMemo(() => {
     if (!kind || !identity) return []
@@ -120,7 +127,27 @@ export default function FolderPage() {
         font.tags.some((tag) => normalize(tag).includes(term)),
     )
   }, [fonts, query])
-  const visibleCards = isPalette ? visibleColors : isTypo ? visibleFonts : visibleLogos
+  // The icon library of the identity (at most one). The search looks at the name, the style
+  // and the tags.
+  const visibleLibraries = useMemo(() => {
+    if (!isLibrary || !identity) return []
+    const term = normalize(query.trim())
+    const all = identity.bibliotecaDeIcones
+    if (!term) return all
+    return all.filter(
+      (item) =>
+        normalize(item.name).includes(term) ||
+        normalize(item.style || '').includes(term) ||
+        item.tags.some((tag) => normalize(tag).includes(term)),
+    )
+  }, [isLibrary, identity, query])
+  const visibleCards = isPalette
+    ? visibleColors
+    : isTypo
+      ? visibleFonts
+      : isLibrary
+        ? visibleLibraries
+        : visibleLogos
 
   // Items of this folder that match the search. Nothing renders them yet, but the
   // filter is in place for when items exist. The add cards are never filtered.
@@ -151,12 +178,12 @@ export default function FolderPage() {
         }
         return
       }
-      if (upload || searchOpen || viewerId || paletteOpen || generateOpen || fontModal) return
+      if (upload || searchOpen || viewerId || paletteOpen || generateOpen || fontModal || libraryModal || chooser) return
       if (selectedIds.length > 0) setSelectedIds([])
     }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
-  }, [deleteTarget, deleting, upload, searchOpen, selectedIds, viewerId, paletteOpen, generateOpen, fontModal])
+  }, [deleteTarget, deleting, upload, searchOpen, selectedIds, viewerId, paletteOpen, generateOpen, fontModal, libraryModal, chooser])
 
   useEffect(() => () => clearTimeout(shareTimer.current), [])
 
@@ -295,6 +322,35 @@ export default function FolderPage() {
     setFontModal({ mode: 'upload', type, font: { family: read.family, weights: read.weights } })
   }
 
+  // "Faça upload da sua biblioteca": one .zip (up to 50 MB) with SVGs. A valid pick opens the
+  // library modal titled with the file name; an invalid one shows a short message.
+  async function handleLibraryUpload() {
+    setUploadError(null)
+    const file = await openFilePicker('.zip,application/zip,application/x-zip-compressed')
+    if (!file) return
+    const read = await readIconZip(file)
+    if (!read.ok) {
+      setUploadError(read.error)
+      return
+    }
+    setLibraryModal({ mode: 'upload', file, name: read.name, count: read.count })
+  }
+
+  // A free library opens its site in a new tab; an uploaded one downloads its .zip.
+  function downloadLibrary(item) {
+    if (item.source === 'library') {
+      window.open(libraryUrl(findLibrary(item.libraryId)), '_blank', 'noopener')
+    } else {
+      saveBlob(item.file, item.fileName)
+    }
+  }
+
+  function handleLibraryAction(action, item) {
+    setMenuLogoId(null)
+    if (action === 'download') downloadLibrary(item)
+    else if (action === 'delete') setDeleteTarget([item.id])
+  }
+
   // Google fonts have no files: "Baixar" opens the family page in a new tab. Uploaded fonts
   // download their file or a .zip.
   async function downloadFontsOf(list) {
@@ -356,7 +412,7 @@ export default function FolderPage() {
       await deleteLogos(
         identity.id,
         deleteTarget,
-        isPalette ? 'paleta' : isTypo ? 'tipografia' : kind.key,
+        isPalette ? 'paleta' : isTypo ? 'tipografia' : isLibrary ? 'bibliotecaDeIcones' : kind.key,
       )
       if (nextViewer !== undefined) setViewerId(nextViewer)
       setSelectedIds((current) => current.filter((item) => !deleteTarget.includes(item)))
@@ -391,15 +447,17 @@ export default function FolderPage() {
             <SelectionBar
               count={selectedIds.length}
               onlyDelete={isPalette}
-              hideShare={isTypo}
+              hideShare={isTypo || isLibrary}
               downloadTip={isTypo && shareTip === 'download-skipped' ? 'Fontes do Google não incluídas' : null}
               shareTip={shareTip === 'toolbar'}
               onClear={() => setSelectedIds([])}
               onDelete={() => setDeleteTarget(selectedIds)}
               onDownload={() =>
-                isTypo
-                  ? downloadFontsOf(fonts.filter((font) => selectedIds.includes(font.id)))
-                  : handleDownload(selectedIds)
+                isLibrary
+                  ? visibleLibraries.filter((item) => selectedIds.includes(item.id)).forEach(downloadLibrary)
+                  : isTypo
+                    ? downloadFontsOf(fonts.filter((font) => selectedIds.includes(font.id)))
+                    : handleDownload(selectedIds)
               }
               onShare={() => showShareTip('toolbar')}
             />
@@ -416,7 +474,7 @@ export default function FolderPage() {
               query={query}
               onQueryChange={setQuery}
               placeholder={`Buscar em ${folder.title}`}
-              escapeEnabled={!upload && !deleteTarget && !viewerId && !paletteOpen && !generateOpen && !fontModal}
+              escapeEnabled={!upload && !deleteTarget && !viewerId && !paletteOpen && !generateOpen && !fontModal && !libraryModal}
               triggerClassName="toolbar-icon-btn"
               iconSize={24}
             />
@@ -447,12 +505,36 @@ export default function FolderPage() {
                       ? () => setPaletteOpen(true)
                       : card.action === 'generate-palette'
                         ? () => setGenerateOpen(true)
+                      : card.action === 'upload-library'
+                        ? handleLibraryUpload
                       : card.action === 'upload-font'
                         ? () => setChooser('font-upload')
                         : card.action === 'google-font'
                           ? () => setChooser('font-google')
                           : undefined
                 }
+              />
+            ))}
+            {isLibrary && identity.bibliotecaDeIcones.length === 0
+              ? ICON_LIBRARIES.map((library) => (
+                  <LibraryAddCard
+                    key={library.id}
+                    library={library}
+                    onClick={() => setLibraryModal({ mode: 'library', libraryId: library.id })}
+                  />
+                ))
+              : null}
+            {visibleLibraries.map((item) => (
+              <LibraryCard
+                key={item.id}
+                item={item}
+                selected={selectedIds.includes(item.id)}
+                selecting={selectedIds.length > 0}
+                menuOpen={menuLogoId === item.id}
+                onToggleSelect={toggleSelect}
+                onOpenMenu={setMenuLogoId}
+                onCloseMenu={closeMenu}
+                onAction={handleLibraryAction}
               />
             ))}
             {visibleFonts.map((font) => (
@@ -556,7 +638,9 @@ export default function FolderPage() {
                 ? deleteTarget.length === 1
                   ? 'Excluir tipografia?'
                   : `Excluir ${deleteTarget.length} tipografias?`
-                : kind.deleteTitle(deleteTarget.length)
+                : isLibrary
+                  ? 'Excluir biblioteca?'
+                  : kind.deleteTitle(deleteTarget.length)
           }
           text="Essa ação não pode ser desfeita."
           cancelLabel="Cancelar"
@@ -598,6 +682,15 @@ export default function FolderPage() {
             if (source === 'font-upload') handleFontUpload(type)
             else setFontModal({ mode: 'google', type })
           }}
+        />
+      ) : null}
+
+      {libraryModal ? (
+        <NewLibraryModal
+          identity={identity}
+          source={libraryModal}
+          onClose={() => setLibraryModal(null)}
+          onSave={(item, createdRights) => addLogo(identity.id, item, createdRights, 'bibliotecaDeIcones')}
         />
       ) : null}
 

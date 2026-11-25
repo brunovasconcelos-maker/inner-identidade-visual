@@ -1,4 +1,4 @@
-import { FilePlus, Package, Palette, Sparkle, TextAa } from '@phosphor-icons/react'
+import { FilePlus, Palette, Sparkle, TextAa } from '@phosphor-icons/react'
 import { hasFreeLogoType } from './logoTypes.js'
 import { hasFreeFontType } from './typography.js'
 
@@ -93,8 +93,12 @@ export const FOLDERS = [
     key: 'bibliotecaDeIcones',
     title: 'Biblioteca de ícones',
     cards: [
-      upload('Faça upload da sua biblioteca'),
-      { id: 'free', icon: <Package {...ICON} />, label: 'Selecione uma biblioteca grátis' },
+      upload('Faça upload da sua biblioteca', {
+        action: 'upload-library',
+        disabledStyle: 'filled',
+        // An identity has a single library: the card is disabled while it exists.
+        isEnabled: (identity) => identity.bibliotecaDeIcones.length === 0,
+      }),
     ],
   },
   { slug: 'fotografia', key: 'fotografia', title: 'Fotografia', cards: [] },

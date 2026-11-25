@@ -4134,3 +4134,117 @@ a.btn {
 .type-card:disabled .type-card__description {
   color: #aeaeae;
 }
+
+/* ---------- Biblioteca de ícones (Figma nodes 6512:11836, 6512:14018, 6512:14369, 6512:13402) ---------- */
+.lib-glyph {
+  display: block;
+  flex: none;
+  width: 24px;
+  height: 24px;
+}
+
+.lib-glyph svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.lib-glyph--img {
+  object-fit: contain;
+}
+
+/* Free library card: tint background, 180 x 180 icon pattern, fade, label. */
+.lib-card {
+  position: relative;
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 175.333px;
+  height: 160px;
+  padding: 24px;
+  border: 0;
+  border-radius: 16px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: box-shadow 150ms ease;
+}
+
+.lib-card:hover {
+  box-shadow: var(--shadow-card-hover);
+}
+
+.lib-pattern {
+  position: absolute;
+  top: -9px;
+  left: -2.33px;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  align-items: center;
+  gap: 15px;
+  width: 180px;
+  height: 180px;
+  color: var(--lib-icon, #000000);
+}
+
+.lib-card__fade {
+  position: absolute;
+  top: 22px;
+  left: -15.33px;
+  width: 206px;
+  height: 118px;
+  border-radius: 50%;
+  filter: blur(17px);
+  pointer-events: none;
+}
+
+.lib-card__label {
+  position: relative;
+  width: 128px;
+  white-space: pre-line;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.3;
+  text-align: center;
+}
+
+/* Library of the identity: the pattern is clipped to the rounded preview (the kebab menu is
+   not). */
+.lib-item__clip {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 16px;
+  pointer-events: none;
+}
+
+/* Library modal: icon grid, then the rows. */
+.lib-body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.lib-grid {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  align-items: center;
+  gap: 15px;
+  width: 100%;
+  height: 180px;
+  color: #000000;
+}
+
+.logo-row--static {
+  cursor: default;
+}
+
+.logo-row__value--wide {
+  flex: none;
+  width: auto;
+}

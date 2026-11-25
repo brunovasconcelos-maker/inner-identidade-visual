@@ -8,6 +8,7 @@ export default function AdvancedPanel({
   initial,
   customRights: initialCustomRights,
   withName = false,
+  namePlaceholder = 'Nome do elemento',
   onSave,
   onCancel,
 }) {
@@ -55,7 +56,7 @@ export default function AdvancedPanel({
               className="input"
               type="text"
               value={name}
-              placeholder="Nome do elemento"
+              placeholder={namePlaceholder}
               autoComplete="off"
               onChange={(event) => setName(event.target.value)}
             />
