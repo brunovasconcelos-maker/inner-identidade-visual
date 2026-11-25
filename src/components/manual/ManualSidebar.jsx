@@ -7,7 +7,7 @@ import { subOptions, manualPath, visibleSections } from '../../data/manual.js'
 const ROW = 32
 const GAP = 8
 // Pages whose sub options scroll to a section of the same page.
-const SCROLLING_PAGES = ['logo', 'paleta-de-cores']
+const SCROLLING_PAGES = ['logo', 'paleta-de-cores', 'tipografia']
 
 function usePrefersReducedMotion() {
   const [reduced, setReduced] = useState(

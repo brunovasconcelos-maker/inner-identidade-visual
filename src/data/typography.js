@@ -52,6 +52,9 @@ const WEIGHT_NAMES = {
 export const normalizeWeight = (value) =>
   Math.min(900, Math.max(100, Math.round((Number(value) || 400) / 100) * 100))
 
+// Style name of a weight, e.g. "Regular", "Bold Italic".
+export const styleName = (weight, italic) => `${WEIGHT_NAMES[weight] || weight}${italic ? ' Italic' : ''}`
+
 export const weightLabel = (weight, italic) =>
   `${WEIGHT_NAMES[weight] || weight} ${weight}${italic ? ' Italic' : ''}`
 

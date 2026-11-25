@@ -40,6 +40,48 @@ export function defaultLogoTexts(brandName, type) {
   return null
 }
 
+// ---------- fonts ----------
+
+// Default texts of a font by type (principal, secundaria, digital).
+export function defaultFontTexts(brandName, type) {
+  if (type === 'principal') {
+    return {
+      description: `A tipografia principal é a fonte mais marcante de ${brandName}. Ela carrega a personalidade da marca e é a primeira a ser percebida nas peças.`,
+      useCases:
+        'Use em títulos, chamadas, destaques e textos de maior impacto. Prefira tamanhos grandes, onde o desenho da fonte aparece com mais força.',
+    }
+  }
+  if (type === 'secundaria') {
+    return {
+      description:
+        'A tipografia secundária acompanha a principal e garante conforto de leitura. Ela equilibra a comunicação, dando espaço para a fonte principal se destacar.',
+      useCases:
+        'Use em textos corridos, subtítulos, legendas e informações de apoio. Funciona bem em tamanhos menores e em blocos longos de texto.',
+    }
+  }
+  if (type === 'digital') {
+    return {
+      description: `A tipografia digital é a fonte de apoio de ${brandName} para ambientes onde as fontes principais não podem ser carregadas, como e-mails, sistemas e alguns aplicativos.`,
+      useCases:
+        'Use quando a fonte principal ou secundária não estiver disponível. Ela mantém a comunicação próxima da identidade da marca, sem quebrar o layout.',
+    }
+  }
+  return null
+}
+
+// A font with its empty description or use cases filled, or the same object.
+export function withDefaultFontTexts(font, brandName) {
+  const defaults = defaultFontTexts(brandName, font.type)
+  if (!defaults) return font
+  const empty = (value) => !String(value || '').trim()
+  if (!empty(font.description) && !empty(font.useCases)) return font
+  return {
+    ...font,
+    description: empty(font.description) ? defaults.description : font.description,
+    useCases: empty(font.useCases) ? defaults.useCases : font.useCases,
+  }
+}
+
 // Returns the logo with its empty fields filled (every logo type), or the
 // same object when nothing was missing.
 export function withDefaultLogoTexts(logo, brandName) {
@@ -57,5 +99,9 @@ export function withDefaultLogoTexts(logo, brandName) {
 // Same for every logo of an identity. Returns the same identity when nothing changed.
 export function withDefaultTextsInIdentity(identity) {
   const logos = identity.logos.map((logo) => withDefaultLogoTexts(logo, identity.name))
-  return logos.some((logo, index) => logo !== identity.logos[index]) ? { ...identity, logos } : identity
+  const tipografia = identity.tipografia.map((font) => withDefaultFontTexts(font, identity.name))
+  const logosChanged = logos.some((logo, index) => logo !== identity.logos[index])
+  const fontsChanged = tipografia.some((font, index) => font !== identity.tipografia[index])
+  if (!logosChanged && !fontsChanged) return identity
+  return { ...identity, ...(logosChanged ? { logos } : {}), ...(fontsChanged ? { tipografia } : {}) }
 }

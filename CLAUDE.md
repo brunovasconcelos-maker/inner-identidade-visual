@@ -20,3 +20,4 @@ Data: identities and their files persist in IndexedDB (`src/storage/db.js`). loc
 - **Font weight names follow the market standard (e.g. Light 300 Italic), as an exception to sentence case.**
 - **If something in the design is unclear, ask before assuming.**
 - **Exception: the Inner credits icon is a local SVG from Figma, not Phosphor.**
+- **Exception: the Google icon (a brand logo) is a local SVG from Figma, not Phosphor.**
