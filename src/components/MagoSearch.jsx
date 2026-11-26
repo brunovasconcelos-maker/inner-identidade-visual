@@ -1,13 +1,19 @@
-import { ArrowUp } from '@phosphor-icons/react'
+import { ArrowUp, Plus } from '@phosphor-icons/react'
+import MagoAvatar from './MagoAvatar'
 
-// Visual only.
+// Visual only (the chat opens in a later step).
 export default function MagoSearch() {
   return (
     <div className="mago">
-      <p className="mago__title">O que você precisa achar?</p>
+      <div className="mago__head">
+        <MagoAvatar size={48} />
+        <p className="mago__title">O que você precisa achar?</p>
+      </div>
       <div className="mago__field">
-        <div className="mago__avatar" />
-        <span className="mago__placeholder">Digite sua busca aqui...</span>
+        <button type="button" className="mago__plus" aria-label="Adicionar">
+          <Plus size={20} color="#5d5d5d" weight="regular" />
+        </button>
+        <input className="mago__input" type="text" placeholder="Digite sua busca aqui..." />
         <div className="mago__send">
           <ArrowUp size={20} color="#798282" weight="regular" />
         </div>
