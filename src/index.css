@@ -4649,3 +4649,115 @@ a.btn {
 .manual-pager__link:focus-visible .manual-pager__name {
   color: var(--manual-brand, #1a1a1a);
 }
+
+/* ---------- Mago chat overlay (Figma node 6526:18268) ---------- */
+.mago__send {
+  border: 0;
+  padding: 0;
+}
+
+.mago__send--active {
+  background: #000000;
+  cursor: pointer;
+}
+
+.mago-chat {
+  --m3-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --m3-accelerate: cubic-bezier(0.3, 0, 0.8, 0.15);
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: var(--overlay);
+  animation: mago-chat-backdrop-in 250ms var(--m3-decelerate) both;
+}
+
+.mago-chat__panel {
+  position: absolute;
+  inset: 12px;
+  overflow: hidden;
+  background: var(--surface-white);
+  animation: mago-chat-panel-in 250ms var(--m3-decelerate) both;
+}
+
+.mago-chat__close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 360px;
+  background: var(--surface-white);
+  cursor: pointer;
+}
+
+.mago-chat__today {
+  position: absolute;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+  padding: 8px 12px;
+  border-radius: 360px;
+  background: rgba(227, 230, 230, 0.5);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.mago-chat__empty {
+  position: absolute;
+  top: calc(50% - 87px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 700px;
+}
+
+.mago-chat__bar {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 700px;
+}
+
+.mago-chat--closing {
+  animation: mago-chat-backdrop-out 200ms var(--m3-accelerate) both;
+}
+
+.mago-chat--closing .mago-chat__panel {
+  animation: mago-chat-panel-out 200ms var(--m3-accelerate) both;
+}
+
+@keyframes mago-chat-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes mago-chat-backdrop-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes mago-chat-panel-in {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes mago-chat-panel-out {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.98); }
+}
