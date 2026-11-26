@@ -60,6 +60,21 @@ export async function downloadLogos(identityName, logos, kind = ASSET_KINDS.logo
   saveBlob(new Blob([zipped], { type: 'application/zip' }), `${safeName(identityName)}-${kind.zipSuffix}.zip`)
 }
 
+// Zip with the original logo files only (no monochrome versions), flat, in the order given.
+// A repeated file name becomes "name-2.ext".
+export async function buildOriginalLogosZip(logos) {
+  const files = {}
+  for (const logo of logos) {
+    const base = safeName(logo.fileName)
+    const ext = extensionOf(base)
+    const stem = ext ? base.slice(0, -ext.length) : base
+    let path = base
+    for (let n = 2; files[path]; n += 1) path = `${stem}-${n}${ext}`
+    files[path] = await bytesOf(logo.file)
+  }
+  return new Blob([zipSync(files)], { type: 'application/zip' })
+}
+
 // Fonts: one uploaded font with a single file downloads that file; one with several files
 // downloads "[family].zip"; several fonts go in one "[identity name]-tipografia.zip", one
 // folder per family. Google fonts have no files, so they are skipped. Resolves with how

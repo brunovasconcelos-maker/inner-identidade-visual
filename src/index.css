@@ -4779,3 +4779,234 @@ a.btn {
 @media (prefers-reduced-motion: reduce) {
   .mago-chat__ring { display: none; }
 }
+
+/* ---------- Mago chat: conversation (Figma node 6526:18793) ---------- */
+.mago-chat__bar .mago__field {
+  align-items: flex-end;
+  border-radius: 29px;
+}
+
+.mago-chat__bar textarea.mago__input {
+  display: block;
+  box-sizing: border-box;
+  height: 32px;
+  min-height: 32px;
+  padding: 7.6px 0;
+  resize: none;
+  overflow-y: auto;
+}
+
+.mago-chat__thread-wrap {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.mago-thread {
+  position: absolute;
+  top: 60px;
+  left: 0;
+  right: 0;
+  overflow-y: auto;
+  pointer-events: auto;
+}
+
+.mago-thread__column {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 627px;
+  margin: 0 auto;
+  padding: 45px 0 24px;
+}
+
+.mago-msg {
+  display: flex;
+  width: 100%;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.2;
+  color: var(--text-default);
+}
+
+.mago-msg--user {
+  justify-content: flex-end;
+}
+
+.mago-msg__user-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+  max-width: 80%;
+}
+
+.mago-msg__bubble {
+  padding: 16px;
+  border-radius: 8px 8px 0 8px;
+  background: #f4f5f5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.mago-msg__mago-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.mago-msg__time {
+  font-size: 12px;
+  line-height: 1.2;
+  color: var(--text-secondary);
+}
+
+.mago-msg__time--right {
+  text-align: right;
+}
+
+.mago-msg__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mago-msg__link-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mago-msg__dot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  background: #eafbf0;
+}
+
+.mago-msg__link {
+  color: #3da1ee;
+  text-decoration: underline;
+  text-decoration-skip-ink: auto;
+  cursor: pointer;
+}
+
+.mago-msg__tiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mago-tile {
+  position: relative;
+  width: 125px;
+  height: 125px;
+  overflow: hidden;
+  border: 1px solid var(--border-default);
+  border-radius: 16px;
+  background: var(--surface-white);
+}
+
+.mago-tile__image {
+  position: absolute;
+  inset: 11px 18px;
+  width: calc(100% - 36px);
+  height: calc(100% - 22px);
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.mago-tile__download {
+  position: absolute;
+  top: 11px;
+  left: 96px;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.mago-tile__download::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+}
+
+.mago-zip {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px;
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  background: var(--surface-white);
+  text-align: left;
+  cursor: pointer;
+}
+
+.mago-zip__icon {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: var(--surface-muted);
+}
+
+.mago-zip__texts {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  width: 220px;
+  white-space: nowrap;
+}
+
+.mago-zip__name {
+  font-size: 16px;
+  line-height: 1.2;
+  color: var(--text-default);
+}
+
+.mago-zip__meta {
+  font-size: 14px;
+  line-height: 1.2;
+  color: var(--text-neutral);
+}
+
+/* Typing indicator: three gray dots pulsing (not in Figma). */
+.mago-typing {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 20px;
+}
+
+.mago-typing span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-secondary);
+  animation: mago-typing 1s ease-in-out infinite;
+}
+
+.mago-typing span:nth-child(2) { animation-delay: 0.15s; }
+.mago-typing span:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes mago-typing {
+  0%, 60%, 100% { opacity: 0.3; transform: scale(0.8); }
+  30% { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mago-typing span { animation: none; opacity: 0.6; }
+}

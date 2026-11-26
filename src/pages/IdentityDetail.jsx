@@ -70,7 +70,7 @@ export default function IdentityDetail() {
         <OutrosMenu identityId={identity.id} />
       </div>
 
-      <MagoSearch />
+      <MagoSearch key={identity.id} identity={identity} />
     </PageContainer>
   )
 }

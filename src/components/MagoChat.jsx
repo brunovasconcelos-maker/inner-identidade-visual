@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { createPortal } from 'react-dom'
 import {
+  AnimatePresence,
   animate,
   motion,
   useMotionValue,
@@ -10,8 +11,11 @@ import {
 } from 'framer-motion'
 import { ArrowUp, Plus, X } from '@phosphor-icons/react'
 import MagoAvatar from './MagoAvatar'
+import MagoThread from './MagoThread'
+import { getConversation, sendMessage, setDraft, subscribe } from '../data/magoChatStore.js'
 
 const MARGIN = 12
+const PANEL_RADIUS = 8
 const DECELERATE = [0.05, 0.7, 0.1, 1]
 const ACCELERATE = [0.3, 0, 0.8, 0.15]
 const lerp = (a, b, t) => a + (b - a) * t
@@ -34,8 +38,16 @@ const itemVariantsReduced = {
 
 // Mago chat overlay, first state (empty chat). Sending is not built yet.
 // The panel morphs from the page input (getOriginRect) to the full panel and back.
-export default function MagoChat({ value, onChange, onClose, getOriginRect }) {
+export default function MagoChat({ identity, onClose, getOriginRect, onOpenFolder }) {
   const reduced = useReducedMotion()
+  const conversation = useSyncExternalStore(
+    subscribe,
+    () => getConversation(identity.id),
+  )
+  const { messages, draft: value, pending } = conversation
+  const initialCount = useRef(messages.length).current
+  const [inputExtra, setInputExtra] = useState(0)
+  const hasConversation = messages.length > 0 || pending > 0
   const [contentVisible, setContentVisible] = useState(false)
   const [pulseOn, setPulseOn] = useState(false)
   const inputRef = useRef(null)
@@ -60,7 +72,7 @@ export default function MagoChat({ value, onChange, onClose, getOriginRect }) {
   const width = useTransform(geo, ([p, , , w, , viewW]) => lerp(w, viewW - MARGIN * 2, p))
   const height = useTransform(geo, ([p, , , , h, , viewH]) => lerp(h, viewH - MARGIN * 2, p))
   // The input is a pill, so its rendered radius is half its height.
-  const radius = useTransform(geo, ([p, , , , h]) => lerp(Math.min(360, h / 2), 0, p))
+  const radius = useTransform(geo, ([p, , , , h]) => lerp(Math.min(360, h / 2), PANEL_RADIUS, p))
   const border = useTransform(progress, (p) => `inset 0 0 0 1px rgba(222, 222, 222, ${1 - clamp01(p)})`)
   const layerX = useTransform([left], ([l]) => MARGIN - l)
   const layerY = useTransform([top], ([t]) => MARGIN - t)
@@ -126,7 +138,7 @@ export default function MagoChat({ value, onChange, onClose, getOriginRect }) {
   }, [])
 
   // Close: content fades (150ms), then the panel morphs back into the input (300ms).
-  const requestClose = async () => {
+  const requestClose = async (after) => {
     if (closingRef.current) return
     closingRef.current = true
     openAnim.current?.stop()
@@ -143,7 +155,10 @@ export default function MagoChat({ value, onChange, onClose, getOriginRect }) {
       oh.set(rect.height)
       await animate(progress, 0, { duration: 0.3, ease: ACCELERATE })
     }
-    if (aliveRef.current) onClose()
+    if (aliveRef.current) {
+      onClose()
+      if (typeof after === 'function') after()
+    }
   }
   const closeRef = useRef(requestClose)
   closeRef.current = requestClose
@@ -160,6 +175,30 @@ export default function MagoChat({ value, onChange, onClose, getOriginRect }) {
   }, [])
 
   const canSend = value.trim().length > 0
+
+  const send = () => {
+    if (!canSend) return
+    sendMessage(identity, value)
+    focusInput()
+  }
+
+  // The input grows with its text (up to 5 lines).
+  useEffect(() => {
+    const el = inputRef.current
+    if (!el) return
+    el.style.height = 'auto'
+    const height = Math.min(Math.max(el.scrollHeight, 32), 100)
+    el.style.height = `${height}px`
+    setInputExtra(height - 32)
+  }, [value])
+
+  const onKeyDown = (event) => {
+    if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
+      event.preventDefault()
+      send()
+    }
+  }
+
   const variants = reduced ? itemVariantsReduced : itemVariants
   const state = contentVisible ? 'visible' : 'hidden'
 
@@ -191,42 +230,63 @@ export default function MagoChat({ value, onChange, onClose, getOriginRect }) {
               Hoje
             </motion.span>
           </div>
-          <div className="mago-chat__empty">
-            <motion.div
-              className="mago-chat__avatar"
-              variants={variants}
-              custom={1}
-              initial="hidden"
-              animate={state}
-              onAnimationComplete={(definition) => {
-                if (definition === 'visible' && !reduced && !closingRef.current) setPulseOn(true)
-              }}
-            >
-              {pulseOn && (
-                <>
-                  <span className="mago-chat__ring" aria-hidden="true" />
-                  <span className="mago-chat__ring mago-chat__ring--2" aria-hidden="true" />
-                </>
-              )}
-              <MagoAvatar size={48} />
+          <AnimatePresence>
+            {!hasConversation && (
+              <motion.div
+                key="empty"
+                className="mago-chat__empty"
+                exit={{ opacity: 0, transition: { duration: 0.15 } }}
+              >
+                <motion.div
+                  className="mago-chat__avatar"
+                  variants={variants}
+                  custom={1}
+                  initial="hidden"
+                  animate={state}
+                  onAnimationComplete={(definition) => {
+                    if (definition === 'visible' && !reduced && !closingRef.current) setPulseOn(true)
+                  }}
+                >
+                  {pulseOn && (
+                    <>
+                      <span className="mago-chat__ring" aria-hidden="true" />
+                      <span className="mago-chat__ring mago-chat__ring--2" aria-hidden="true" />
+                    </>
+                  )}
+                  <MagoAvatar size={48} />
+                </motion.div>
+                <motion.p className="mago__title" variants={variants} custom={2} initial="hidden" animate={state}>
+                  O que você precisa achar?
+                </motion.p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+          {hasConversation && (
+            <motion.div className="mago-chat__thread-wrap" variants={variants} custom={1} initial="hidden" animate={state}>
+              <MagoThread
+                messages={messages}
+                pending={pending}
+                initialCount={initialCount}
+                identityId={identity.id}
+                bottomExtra={inputExtra}
+                onOpenFolder={() => requestClose(() => onOpenFolder('logo'))}
+              />
             </motion.div>
-            <motion.p className="mago__title" variants={variants} custom={2} initial="hidden" animate={state}>
-              O que você precisa achar?
-            </motion.p>
-          </div>
+          )}
           <div className="mago-chat__bar">
             <motion.div variants={variants} custom={3} initial="hidden" animate={state}>
               <div className="mago__field">
                 <button type="button" className="mago__plus" aria-label="Adicionar">
                   <Plus size={20} color="#5d5d5d" weight="regular" />
                 </button>
-                <input
+                <textarea
                   ref={inputRef}
                   className="mago__input"
-                  type="text"
+                  rows={1}
                   placeholder="Digite sua busca aqui..."
                   value={value}
-                  onChange={(event) => onChange(event.target.value)}
+                  onChange={(event) => setDraft(identity.id, event.target.value)}
+                  onKeyDown={onKeyDown}
                 />
                 <button
                   type="button"
@@ -234,6 +294,7 @@ export default function MagoChat({ value, onChange, onClose, getOriginRect }) {
                   aria-label="Enviar"
                   aria-disabled={!canSend}
                   tabIndex={canSend ? 0 : -1}
+                  onClick={send}
                 >
                   <ArrowUp size={20} color={canSend ? '#ffffff' : '#798282'} weight="regular" />
                 </button>

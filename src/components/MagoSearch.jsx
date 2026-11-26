@@ -1,12 +1,13 @@
 import { useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { ArrowUp, Plus } from '@phosphor-icons/react'
 import MagoAvatar from './MagoAvatar'
 import MagoChat from './MagoChat'
 
 // Clicking or focusing the input opens the Mago chat overlay.
-export default function MagoSearch() {
+export default function MagoSearch({ identity }) {
   const [open, setOpen] = useState(false)
-  const [text, setText] = useState('')
+  const navigate = useNavigate()
   const inputRef = useRef(null)
   const skipOpen = useRef(false)
   const fieldRef = useRef(null)
@@ -46,9 +47,9 @@ export default function MagoSearch() {
         </div>
       </div>
       {open && <MagoChat
-          value={text}
-          onChange={setText}
+          identity={identity}
           onClose={handleClose}
+          onOpenFolder={(slug) => navigate(`/id/${identity.id}/${slug}`)}
           getOriginRect={() => fieldRef.current.getBoundingClientRect()}
         />}
     </div>

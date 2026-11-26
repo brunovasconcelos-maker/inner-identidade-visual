@@ -14,3 +14,17 @@ export function normalize(text) {
     .replace(/[̀-ͯ]/g, '')
     .toLowerCase()
 }
+
+// "10 KB", "1,2 MB": pt-BR decimals.
+export function formatFileSize(bytes) {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`
+  const mb = (bytes / (1024 * 1024)).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+  return `${mb} MB`
+}
+
+// "15:23": 24h, local time.
+export function formatClock(date = new Date()) {
+  const two = (n) => String(n).padStart(2, '0')
+  return `${two(date.getHours())}:${two(date.getMinutes())}`
+}
