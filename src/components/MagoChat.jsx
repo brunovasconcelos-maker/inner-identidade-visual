@@ -12,12 +12,13 @@ import {
 import { ArrowUp, Plus, X } from '@phosphor-icons/react'
 import MagoAvatar from './MagoAvatar'
 import MagoThread from './MagoThread'
-import { getConversation, sendMessage, setDraft, subscribe } from '../data/magoChatStore.js'
+import { getConversation, isAnswering, sendMessage, setDraft, subscribe } from '../data/magoChatStore.js'
+import { EASE_ACCELERATE, EASE_DECELERATE } from '../motion/tokens.js'
 
 const MARGIN = 12
 const PANEL_RADIUS = 8
-const DECELERATE = [0.05, 0.7, 0.1, 1]
-const ACCELERATE = [0.3, 0, 0.8, 0.15]
+const DECELERATE = EASE_DECELERATE
+const ACCELERATE = EASE_ACCELERATE
 const lerp = (a, b, t) => a + (b - a) * t
 const clamp01 = (v) => Math.min(1, Math.max(0, v))
 const wait = (ms) => new Promise((resolve) => window.setTimeout(resolve, ms))
@@ -174,7 +175,9 @@ export default function MagoChat({ identity, onClose, getOriginRect, onOpenFolde
     return () => document.removeEventListener('keydown', onKey)
   }, [])
 
-  const canSend = value.trim().length > 0
+  // Disabled while the Mago is answering; typing is still allowed.
+  const answering = isAnswering(conversation)
+  const canSend = value.trim().length > 0 && !answering
 
   const send = () => {
     if (!canSend) return

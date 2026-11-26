@@ -9,7 +9,15 @@ const conversations = new Map()
 const chains = new Map()
 const listeners = new Set()
 
-const TYPING_MS = 800
+const reducedMotion = () =>
+  typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+// The typing indicator lasts 3s (1s with reduced motion).
+const typingMs = () => (reducedMotion() ? 1000 : 3000)
+
+// True while the typing indicator shows or an answer is still being played.
+export function isAnswering(conversation) {
+  return conversation.pending > 0 || conversation.messages.some((m) => m.role === 'mago' && !m.done)
+}
 
 export function subscribe(listener) {
   listeners.add(listener)
@@ -25,6 +33,24 @@ function update(identityId, change) {
   listeners.forEach((listener) => listener())
 }
 
+// Marks an answer as fully played (reopening the chat shows it complete).
+export function finishMessage(identityId, messageId) {
+  const current = getConversation(identityId)
+  if (!current.messages.some((m) => m.id === messageId && !m.done)) return
+  update(identityId, {
+    messages: current.messages.map((m) => (m.id === messageId ? { ...m, done: true } : m)),
+  })
+}
+
+function setAnswerZip(identityId, messageId, zip) {
+  const current = getConversation(identityId)
+  update(identityId, {
+    messages: current.messages.map((m) =>
+      m.id === messageId ? { ...m, answer: { ...m.answer, zip } } : m,
+    ),
+  })
+}
+
 export function setDraft(identityId, draft) {
   update(identityId, { draft })
 }
@@ -37,6 +63,7 @@ export function sendMessage(identity, rawText) {
   if (!text) return
   const id = identity.id
   const current = getConversation(id)
+  if (isAnswering(current)) return
   update(id, {
     draft: '',
     pending: current.pending + 1,
@@ -52,12 +79,15 @@ export function sendMessage(identity, rawText) {
       console.error('Mago could not answer', error)
       answer = { kind: 'unknown', text: 'Não consegui buscar isso agora. Tente de novo.' }
     }
-    await wait(Math.max(0, TYPING_MS - (Date.now() - startedAt)))
+    await wait(Math.max(0, typingMs() - (Date.now() - startedAt)))
     const latest = getConversation(id)
+    const messageId = newId()
     update(id, {
       pending: latest.pending - 1,
-      messages: [...latest.messages, { id: newId(), role: 'mago', answer, time: formatClock() }],
+      messages: [...latest.messages, { id: messageId, role: 'mago', answer, time: formatClock(), done: false }],
     })
+    // The zip is built when the answer is created; the card shows when it is ready.
+    if (answer.zipPromise) answer.zipPromise.then((zip) => setAnswerZip(id, messageId, zip))
   }
   // Answers keep the order of the questions.
   const previous = chains.get(id) || Promise.resolve()

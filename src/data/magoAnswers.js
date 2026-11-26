@@ -4,7 +4,8 @@ import { sortLogos } from './logoTypes.js'
 
 // MOCK of the Mago AI. Replace answerFor() with a real call later: it receives the user
 // text and the identity and resolves with an answer object the chat knows how to render:
-//   { kind: 'logos', logos, zip: { blob, fileName, sizeLabel } | null }
+//   { kind: 'logos', logos, zip: null, zipPromise: Promise<{ blob, fileName, sizeLabel }> | null }
+//   (the zip is built when the answer is created; the chat shows a skeleton until it is ready)
 //   { kind: 'noLogos' }
 //   { kind: 'unknown', text }
 
@@ -26,10 +27,13 @@ export async function answerFor(text, identity) {
     fileName: logo.fileName,
   }))
   if (logos.length === 0) return { kind: 'noLogos' }
-  let zip = null
-  if (logos.length > 1) {
-    const blob = await buildOriginalLogosZip(logos)
-    zip = { blob, fileName: 'Logos.zip', sizeLabel: formatFileSize(blob.size) }
-  }
-  return { kind: 'logos', logos, zip }
+  const zipPromise =
+    logos.length > 1
+      ? buildOriginalLogosZip(logos).then((blob) => ({
+          blob,
+          fileName: 'Logos.zip',
+          sizeLabel: formatFileSize(blob.size),
+        }))
+      : null
+  return { kind: 'logos', logos, zip: null, zipPromise }
 }

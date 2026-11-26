@@ -4983,7 +4983,7 @@ a.btn {
   color: var(--text-neutral);
 }
 
-/* Typing indicator: three gray dots pulsing (not in Figma). */
+/* Typing indicator: three gray dots bouncing in sequence, 4px up and back (not in Figma). */
 .mago-typing {
   display: flex;
   align-items: center;
@@ -4996,17 +4996,118 @@ a.btn {
   height: 6px;
   border-radius: 50%;
   background: var(--text-secondary);
-  animation: mago-typing 1s ease-in-out infinite;
+  animation: mago-typing 600ms ease-in-out infinite;
 }
 
-.mago-typing span:nth-child(2) { animation-delay: 0.15s; }
-.mago-typing span:nth-child(3) { animation-delay: 0.3s; }
+.mago-typing span:nth-child(2) { animation-delay: 150ms; }
+.mago-typing span:nth-child(3) { animation-delay: 300ms; }
 
 @keyframes mago-typing {
-  0%, 60%, 100% { opacity: 0.3; transform: scale(0.8); }
-  30% { opacity: 1; transform: scale(1); }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .mago-typing span { animation: none; opacity: 0.6; }
+  .mago-typing span { animation-name: mago-typing-fade; }
 }
+
+@keyframes mago-typing-fade {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+/* Answer sequence: word stream, skeletons with shimmer, fades. */
+.mago-word {
+  animation: mago-word-in 200ms var(--m3-decelerate) both;
+}
+
+.mago-fade {
+  animation: mago-word-in 150ms var(--m3-decelerate) both;
+}
+
+@keyframes mago-word-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.mago-tile-slot {
+  position: relative;
+  width: 125px;
+  height: 125px;
+}
+
+.mago-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: #f0f0f0;
+}
+
+.mago-skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.7), transparent);
+  transform: translateX(-100%);
+  animation: mago-shimmer 1.2s linear infinite;
+}
+
+@keyframes mago-shimmer {
+  to { transform: translateX(100%); }
+}
+
+.mago-skeleton--tile {
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  pointer-events: none;
+}
+
+.mago-zipbox {
+  position: relative;
+  width: 342px;
+  height: 66px;
+}
+
+.mago-zipbox__layer {
+  position: absolute;
+  inset: 0;
+}
+
+.mago-zip-skeleton {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  padding: 12px;
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+}
+
+.mago-zip-skeleton__icon {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+}
+
+.mago-zip-skeleton__lines {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mago-zip-skeleton__line {
+  display: block;
+  height: 12px;
+  border-radius: 4px;
+}
+
+.mago-zip-skeleton__line--name { width: 120px; }
+.mago-zip-skeleton__line--meta { width: 168px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mago-skeleton::after { animation: none; display: none; }
+}
+
