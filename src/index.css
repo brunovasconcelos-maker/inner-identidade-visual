@@ -5160,3 +5160,9 @@ a.btn {
   line-height: normal;
   pointer-events: none;
 }
+
+/* Folder pages that are under construction: the empty state sits 139.5px below the header divider
+   (Figma node 6534:20787). */
+.empty-state--folder {
+  margin-top: 139.5px;
+}

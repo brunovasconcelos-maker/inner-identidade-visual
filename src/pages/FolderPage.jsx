@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
+import FolderUnderConstruction, { UNDER_CONSTRUCTION } from './FolderUnderConstruction.jsx'
 import ManualLink from '../components/manual/ManualLink.jsx'
 import PageContainer from '../components/PageContainer.jsx'
 import Breadcrumb from '../components/Breadcrumb.jsx'
@@ -55,7 +56,13 @@ function logoMatches(logo, label, term, searchFormat) {
   )
 }
 
+// Fotografia, Tom de voz and Personalidade are not built yet: they show an empty state.
 export default function FolderPage() {
+  const { section } = useParams()
+  return Object.hasOwn(UNDER_CONSTRUCTION, section) ? <FolderUnderConstruction /> : <FolderContent />
+}
+
+function FolderContent() {
   const { id, section } = useParams()
   const { identities, loading, addLogo, addItems, updateLogo, updatePaletteColor, deleteLogos } = useIdentities()
   const identity = identities.find((item) => item.id === id)
