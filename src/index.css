@@ -4662,21 +4662,29 @@ a.btn {
 }
 
 .mago-chat {
-  --m3-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1);
-  --m3-accelerate: cubic-bezier(0.3, 0, 0.8, 0.15);
   position: fixed;
   inset: 0;
   z-index: 200;
-  background: var(--overlay);
-  animation: mago-chat-backdrop-in 250ms var(--m3-decelerate) both;
 }
 
+.mago-chat__backdrop {
+  position: absolute;
+  inset: 0;
+  background: var(--overlay);
+}
+
+/* The panel morphs from the page input; its geometry is driven by framer-motion. */
 .mago-chat__panel {
   position: absolute;
-  inset: 12px;
   overflow: hidden;
   background: var(--surface-white);
-  animation: mago-chat-panel-in 250ms var(--m3-decelerate) both;
+}
+
+/* Content keeps its final position while the panel grows around it. */
+.mago-chat__layer {
+  position: absolute;
+  left: 0;
+  top: 0;
 }
 
 .mago-chat__close {
@@ -4695,11 +4703,14 @@ a.btn {
   cursor: pointer;
 }
 
-.mago-chat__today {
+.mago-chat__today-pos {
   position: absolute;
   top: 24px;
   left: 50%;
   transform: translateX(-50%);
+}
+
+.mago-chat__today {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -4734,30 +4745,37 @@ a.btn {
   width: 700px;
 }
 
-.mago-chat--closing {
-  animation: mago-chat-backdrop-out 200ms var(--m3-accelerate) both;
+/* Live pulse: two soft green discs behind the avatar, each growing 8px past its edge. */
+.mago-chat__avatar {
+  position: relative;
+  width: 48px;
+  height: 48px;
 }
 
-.mago-chat--closing .mago-chat__panel {
-  animation: mago-chat-panel-out 200ms var(--m3-accelerate) both;
+.mago-chat__avatar .mago-avatar {
+  position: relative;
+  z-index: 1;
 }
 
-@keyframes mago-chat-backdrop-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+.mago-chat__ring {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: 50%;
+  background: #34c759;
+  opacity: 0;
+  animation: mago-chat-pulse 2s ease-out infinite;
 }
 
-@keyframes mago-chat-backdrop-out {
-  from { opacity: 1; }
-  to { opacity: 0; }
+.mago-chat__ring--2 {
+  animation-delay: 1s;
 }
 
-@keyframes mago-chat-panel-in {
-  from { opacity: 0; transform: scale(0.98); }
-  to { opacity: 1; transform: scale(1); }
+@keyframes mago-chat-pulse {
+  from { opacity: 0.5; transform: scale(1); }
+  to { opacity: 0; transform: scale(1.3333); }
 }
 
-@keyframes mago-chat-panel-out {
-  from { opacity: 1; transform: scale(1); }
-  to { opacity: 0; transform: scale(0.98); }
+@media (prefers-reduced-motion: reduce) {
+  .mago-chat__ring { display: none; }
 }

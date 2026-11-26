@@ -9,6 +9,7 @@ export default function MagoSearch() {
   const [text, setText] = useState('')
   const inputRef = useRef(null)
   const skipOpen = useRef(false)
+  const fieldRef = useRef(null)
 
   const handleClose = () => {
     setOpen(false)
@@ -28,7 +29,7 @@ export default function MagoSearch() {
         <MagoAvatar size={48} />
         <p className="mago__title">O que você precisa achar?</p>
       </div>
-      <div className="mago__field">
+      <div className="mago__field" ref={fieldRef}>
         <button type="button" className="mago__plus" aria-label="Adicionar">
           <Plus size={20} color="#5d5d5d" weight="regular" />
         </button>
@@ -44,7 +45,12 @@ export default function MagoSearch() {
           <ArrowUp size={20} color="#798282" weight="regular" />
         </div>
       </div>
-      {open && <MagoChat value={text} onChange={setText} onClose={handleClose} />}
+      {open && <MagoChat
+          value={text}
+          onChange={setText}
+          onClose={handleClose}
+          getOriginRect={() => fieldRef.current.getBoundingClientRect()}
+        />}
     </div>
   )
 }
