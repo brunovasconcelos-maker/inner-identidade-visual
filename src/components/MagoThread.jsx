@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
-import { DownloadSimple, FileArchive, TrademarkRegistered } from '@phosphor-icons/react'
+import { Check, Copy, DownloadSimple, FileArchive, TrademarkRegistered } from '@phosphor-icons/react'
 import { useObjectUrl } from '../hooks/useObjectUrl.js'
 import { findLogoType } from '../data/logoTypes.js'
 import { finishMessage } from '../data/magoChatStore.js'
+import { blocksFor } from '../data/magoAnswers.js'
+import { isVeryLight } from '../data/palette.js'
 import { saveBlob } from '../utils/download.js'
 import { EASE_DECELERATE } from '../motion/tokens.js'
 
@@ -12,6 +14,8 @@ const WORD_MS = 40
 const TILE_REVEAL_MS = 400
 const TILE_FADE_MS = 300
 const ZIP_MIN_MS = 600
+const CHIP_REVEAL_MS = 200
+const CHIP_FADE_MS = 200
 
 // Calls `fn` once, whenever it is first needed (stable across re-renders).
 function useLatest(fn) {
@@ -22,9 +26,13 @@ function useLatest(fn) {
 
 // ---------- pieces of an answer. mode: 'active' (plays, then calls onDone) | 'done' (static) ----------
 
-// Streams the text word by word, each word fading in. Reduced motion: the whole text fades in.
-function StreamText({ text, mode, reduced, onDone }) {
-  const words = useMemo(() => text.split(' '), [text])
+// Streams the text word by word, each word fading in. `segments` are { t, b } (b = bold).
+// Reduced motion: the whole text fades in.
+function StreamText({ segments, mode, reduced, onDone }) {
+  const words = useMemo(
+    () => segments.flatMap((segment) => (segment.t.match(/\S+\s*|\s+/g) || []).map((w) => ({ w, b: Boolean(segment.b) }))),
+    [segments],
+  )
   const [count, setCount] = useState(mode === 'done' || reduced ? words.length : 0)
   const done = useLatest(onDone)
 
@@ -49,12 +57,14 @@ function StreamText({ text, mode, reduced, onDone }) {
   const animated = mode === 'active'
   return (
     <span className={reduced && animated ? 'mago-fade' : undefined}>
-      {words.slice(0, count).map((word, index) => (
-        <span key={index} className={animated && !reduced ? 'mago-word' : undefined}>
-          {word}
-          {index < words.length - 1 ? ' ' : ''}
-        </span>
-      ))}
+      {words.slice(0, count).map((word, index) => {
+        const classes = [word.b ? 'mago-msg__bold' : '', animated && !reduced ? 'mago-word' : ''].filter(Boolean).join(' ')
+        return (
+          <span key={index} className={classes || undefined}>
+            {word.w}
+          </span>
+        )
+      })}
     </span>
   )
 }
@@ -231,22 +241,114 @@ function ZipStep({ zip, mode, reduced, onDone }) {
   )
 }
 
-// ---------- the answer: each line starts only after the previous one finished ----------
+// Color chip: swatch, hex, (name) and the copy icon. Clicking copies the hex.
+function ColorChip({ chip, shown, instant }) {
+  const [copied, setCopied] = useState(false)
+  const timer = useRef(null)
+  useEffect(() => () => clearTimeout(timer.current), [])
 
-function stepsFor(answer) {
-  if (answer.kind === 'logos') {
-    return answer.logos.length > 1
-      ? ['text', 'link', 'tiles', 'text2', 'zip', 'time']
-      : ['text', 'link', 'tiles', 'time']
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(chip.hex)
+    } catch (error) {
+      console.error('Could not copy', error)
+    }
+    setCopied(true)
+    clearTimeout(timer.current)
+    timer.current = setTimeout(() => setCopied(false), 1500)
   }
-  if (answer.kind === 'noLogos') return ['text', 'link', 'time']
-  return ['text', 'time']
+
+  return (
+    <motion.button
+      type="button"
+      className="mago-chip"
+      aria-label={`Copiar ${chip.hex}`}
+      onClick={copy}
+      initial={instant ? false : { opacity: 0 }}
+      animate={{ opacity: shown ? 1 : 0 }}
+      transition={{ duration: CHIP_FADE_MS / 1000, ease: DECELERATE }}
+      style={{ pointerEvents: shown ? 'auto' : 'none' }}
+    >
+      <span
+        className="mago-chip__swatch"
+        style={{ background: chip.hex, boxShadow: isVeryLight(chip.hex) ? 'inset 0 0 0 1px #dedede' : undefined }}
+      />
+      <span className="mago-chip__hex">{chip.hex}</span>
+      {chip.name && <span className="mago-chip__name">{chip.name}</span>}
+      {copied ? (
+        <Check size={20} color="#5d5d5d" weight="regular" />
+      ) : (
+        <Copy size={20} color="#5d5d5d" weight="regular" />
+      )}
+      {copied && (
+        <span className="mago-chip__tip" role="status">
+          Copiado
+        </span>
+      )}
+    </motion.button>
+  )
 }
 
-function Answer({ identityId, message, folderHref, onOpenFolder }) {
+// A group of chips: skeletons first, then each one fills in, 200ms apart.
+function ChipGroup({ chips, mode, reduced, onDone }) {
+  const [revealed, setRevealed] = useState(mode === 'done' || reduced ? chips.length : 0)
+  const done = useLatest(onDone)
+
+  useEffect(() => {
+    if (mode !== 'active') return undefined
+    if (reduced) {
+      const id = setTimeout(() => done.current(), 150)
+      return () => clearTimeout(id)
+    }
+    let timer
+    let shown = 0
+    const step = () => {
+      shown += 1
+      setRevealed(shown)
+      timer = setTimeout(shown >= chips.length ? () => done.current() : step, shown >= chips.length ? CHIP_FADE_MS : CHIP_REVEAL_MS)
+    }
+    timer = setTimeout(step, CHIP_REVEAL_MS)
+    return () => clearTimeout(timer)
+  }, [mode, reduced, chips.length, done])
+
+  const showSkeleton = !reduced && mode !== 'done'
+  return (
+    <div className={`mago-chips${reduced && mode === 'active' ? ' mago-fade' : ''}`}>
+      {chips.map((chip, index) => (
+        <div className="mago-chip-slot" key={`${chip.hex}-${index}`}>
+          {showSkeleton && (
+            <motion.div
+              className="mago-skeleton mago-skeleton--chip"
+              initial={false}
+              animate={{ opacity: revealed > index ? 0 : 1 }}
+              transition={{ duration: CHIP_FADE_MS / 1000, ease: DECELERATE }}
+            />
+          )}
+          <ColorChip chip={chip} shown={revealed > index} instant={mode === 'done' || reduced} />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// ---------- the answer: each line starts only after the previous one finished ----------
+
+// One step per line: a text, then its link (if any), a group of tiles or chips, the zip,
+// and the timestamp last.
+function stepsFor(answer) {
+  const steps = []
+  blocksFor(answer).forEach((block, index) => {
+    steps.push({ key: `${index}`, block })
+    if (block.type === 'text' && block.link) steps.push({ key: `${index}:link`, block, link: true })
+  })
+  steps.push({ key: 'time', time: true })
+  return steps
+}
+
+function Answer({ identityId, message, onOpenFolder }) {
   const reduced = useReducedMotion()
   const { answer } = message
-  const steps = useMemo(() => stepsFor(answer), [answer.kind, answer.logos?.length]) // eslint-disable-line react-hooks/exhaustive-deps
+  const steps = useMemo(() => stepsFor(answer), [answer])
   const [stage, setStage] = useState(message.done ? steps.length : 0)
   const finished = useRef(Boolean(message.done))
 
@@ -267,59 +369,52 @@ function Answer({ identityId, message, folderHref, onOpenFolder }) {
     [identityId, message.id],
   )
 
-  const modeOf = (name) => {
-    const index = steps.indexOf(name)
-    if (index < 0 || index > stage) return null
-    return index === stage ? 'active' : 'done'
-  }
-  const advance = (name) => () => setStage((current) => (steps.indexOf(name) === current ? current + 1 : current))
+  const modeOf = (index) => (index > stage ? null : index === stage ? 'active' : 'done')
+  const advance = (index) => () => setStage((current) => (current === index ? current + 1 : current))
 
-  const text = modeOf('text')
-  const link = modeOf('link')
-  const tiles = modeOf('tiles')
-  const text2 = modeOf('text2')
-  const zip = modeOf('zip')
-  const time = modeOf('time')
-
-  const sentence =
-    answer.kind === 'logos'
-      ? 'Segue todas as logos que encontrei em'
-      : answer.kind === 'noLogos'
-        ? 'Você ainda não adicionou nenhuma logo.'
-        : answer.text
-  const linkLabel = answer.kind === 'logos' ? 'Logos' : 'Adicionar logo'
-
-  return (
-    <div className="mago-msg__mago-stack">
-      {text && (
-        <div className="mago-msg__row">
-          <StreamText text={sentence} mode={text} reduced={reduced} onDone={advance('text')} />
-          {link && (
-            <FadeIn mode={link} duration={reduced ? 0.15 : 0.2} onDone={advance('link')}>
-              <FolderLink href={folderHref} onOpen={onOpenFolder}>
-                {linkLabel}
+  const nodes = []
+  steps.forEach((step, index) => {
+    const mode = modeOf(index)
+    if (!mode) return
+    if (step.time) {
+      nodes.push(
+        <FadeIn key={step.key} mode={mode} duration={reduced ? 0.15 : 0.2} onDone={advance(index)} className="mago-msg__time">
+          {message.time}
+        </FadeIn>,
+      )
+      return
+    }
+    const { block } = step
+    if (block.type === 'text') {
+      // The text and its link share one row; the link fades in after the last word.
+      if (step.link) return
+      const linkIndex = block.link ? index + 1 : -1
+      const linkMode = linkIndex > 0 ? modeOf(linkIndex) : null
+      nodes.push(
+        <div className="mago-msg__row" key={step.key}>
+          <StreamText segments={block.segments} mode={mode} reduced={reduced} onDone={advance(index)} />
+          {linkMode && (
+            <FadeIn mode={linkMode} duration={reduced ? 0.15 : 0.2} onDone={advance(linkIndex)}>
+              <FolderLink href={`#/id/${identityId}/${block.link.slug}`} onOpen={() => onOpenFolder(block.link.slug)}>
+                {block.link.label}
               </FolderLink>
             </FadeIn>
           )}
-        </div>
-      )}
-      {tiles && <LogoTiles logos={answer.logos} mode={tiles} reduced={reduced} onDone={advance('tiles')} />}
-      {text2 && (
-        <div className="mago-msg__row">
-          <StreamText text="Ou baixe todas juntas" mode={text2} reduced={reduced} onDone={advance('text2')} />
-        </div>
-      )}
-      {zip && <ZipStep zip={answer.zip} mode={zip} reduced={reduced} onDone={advance('zip')} />}
-      {time && (
-        <FadeIn mode={time} duration={reduced ? 0.15 : 0.2} onDone={advance('time')} className="mago-msg__time">
-          {message.time}
-        </FadeIn>
-      )}
-    </div>
-  )
+        </div>,
+      )
+    } else if (block.type === 'tiles') {
+      nodes.push(<LogoTiles key={step.key} logos={block.logos} mode={mode} reduced={reduced} onDone={advance(index)} />)
+    } else if (block.type === 'chips') {
+      nodes.push(<ChipGroup key={step.key} chips={block.chips} mode={mode} reduced={reduced} onDone={advance(index)} />)
+    } else if (block.type === 'zip') {
+      nodes.push(<ZipStep key={step.key} zip={answer.zip} mode={mode} reduced={reduced} onDone={advance(index)} />)
+    }
+  })
+
+  return <div className="mago-msg__mago-stack">{nodes}</div>
 }
 
-function Message({ message, animate, identityId, folderHref, onOpenFolder }) {
+function Message({ message, animate, identityId, onOpenFolder }) {
   const user = message.role === 'user'
   return (
     <motion.div
@@ -334,7 +429,7 @@ function Message({ message, animate, identityId, folderHref, onOpenFolder }) {
           <span className="mago-msg__time mago-msg__time--right">{message.time}</span>
         </div>
       ) : (
-        <Answer identityId={identityId} message={message} folderHref={folderHref} onOpenFolder={onOpenFolder} />
+        <Answer identityId={identityId} message={message} onOpenFolder={onOpenFolder} />
       )}
     </motion.div>
   )
@@ -405,7 +500,6 @@ export default function MagoThread({ messages, pending, initialCount, identityId
             message={message}
             animate={index >= initialCount}
             identityId={identityId}
-            folderHref={`#/id/${identityId}/logo`}
             onOpenFolder={onOpenFolder}
           />
         ))}

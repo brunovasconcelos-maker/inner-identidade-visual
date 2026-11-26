@@ -272,7 +272,7 @@ export default function MagoChat({ identity, onClose, getOriginRect, onOpenFolde
                 initialCount={initialCount}
                 identityId={identity.id}
                 bottomExtra={inputExtra}
-                onOpenFolder={() => requestClose(() => onOpenFolder('logo'))}
+                onOpenFolder={(slug) => requestClose(() => onOpenFolder(slug))}
               />
             </motion.div>
           )}

@@ -5111,3 +5111,75 @@ a.btn {
   .mago-skeleton::after { animation: none; display: none; }
 }
 
+
+/* ---------- Mago chat: color answer (Figma node 6526:19330) ---------- */
+.mago-msg__bold {
+  font-weight: 500;
+}
+
+.mago-chips {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.mago-chip-slot {
+  position: relative;
+}
+
+.mago-skeleton--chip {
+  position: absolute;
+  inset: 0;
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.mago-chip {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 32px;
+  padding: 8px;
+  border: 0;
+  border-radius: 4px;
+  background: rgba(227, 230, 230, 0.5);
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.2;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.mago-chip__swatch {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+}
+
+.mago-chip__hex {
+  font-weight: 500;
+}
+
+.mago-chip__name {
+  font-weight: 400;
+}
+
+.mago-chip__tip {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 8px);
+  transform: translateY(-50%);
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #0e0e0e;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: normal;
+  pointer-events: none;
+}
