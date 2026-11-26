@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
+import { AnimatePresence } from 'framer-motion'
 import { SlidersHorizontal } from '@phosphor-icons/react'
 import ManualLink from '../components/manual/ManualLink.jsx'
 import PageContainer from '../components/PageContainer.jsx'
 import Breadcrumb from '../components/Breadcrumb.jsx'
 import ExpandableSearch from '../components/ExpandableSearch.jsx'
+import FiltersPanel from '../components/FiltersPanel.jsx'
 import AddCard from '../components/AddCard.jsx'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
 import LogoViewer from '../components/logo/LogoViewer.jsx'
@@ -63,6 +65,8 @@ export default function FolderPage() {
   const folder = findFolder(section)
 
   const [searchOpen, setSearchOpen] = useState(false)
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const filtersBtnRef = useRef(null)
   const [query, setQuery] = useState('')
   const [upload, setUpload] = useState(null) // file chosen for the "Nova logo" modal
   const [uploadError, setUploadError] = useState(null)
@@ -180,12 +184,12 @@ export default function FolderPage() {
         }
         return
       }
-      if (upload || searchOpen || viewerId || paletteOpen || generateOpen || fontModal || libraryModal || chooser) return
+      if (filtersOpen || upload || searchOpen || viewerId || paletteOpen || generateOpen || fontModal || libraryModal || chooser) return
       if (selectedIds.length > 0) setSelectedIds([])
     }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
-  }, [deleteTarget, deleting, upload, searchOpen, selectedIds, viewerId, paletteOpen, generateOpen, fontModal, libraryModal, chooser])
+  }, [deleteTarget, deleting, upload, searchOpen, filtersOpen, selectedIds, viewerId, paletteOpen, generateOpen, fontModal, libraryModal, chooser])
 
   useEffect(() => () => clearTimeout(tipTimer.current), [])
 
@@ -473,12 +477,11 @@ export default function FolderPage() {
               query={query}
               onQueryChange={setQuery}
               placeholder={`Buscar em ${folder.title}`}
-              escapeEnabled={!upload && !deleteTarget && !viewerId && !paletteOpen && !generateOpen && !fontModal && !libraryModal}
+              escapeEnabled={!filtersOpen && !upload && !deleteTarget && !viewerId && !paletteOpen && !generateOpen && !fontModal && !libraryModal}
               triggerClassName="toolbar-icon-btn"
               iconSize={24}
             />
-            {/* Visual only. */}
-            <button type="button" className="filters-btn">
+            <button type="button" className="filters-btn" ref={filtersBtnRef} onClick={() => setFiltersOpen(true)}>
               <span className="filters-btn__label">Filtros</span>
               <SlidersHorizontal size={24} color="#798282" weight="regular" />
             </button>
@@ -752,6 +755,12 @@ export default function FolderPage() {
           onSave={(logo, createdRights) => addLogo(identity.id, logo, createdRights, kind.key)}
         />
       ) : null}
+
+      <AnimatePresence>
+        {filtersOpen ? (
+          <FiltersPanel key="filters" returnFocusRef={filtersBtnRef} onClose={() => setFiltersOpen(false)} />
+        ) : null}
+      </AnimatePresence>
     </div>
   )
 }

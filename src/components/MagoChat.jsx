@@ -13,6 +13,7 @@ import { ArrowUp, Plus, X } from '@phosphor-icons/react'
 import MagoAvatar from './MagoAvatar'
 import MagoThread from './MagoThread'
 import { useMagoConversation } from '../hooks/useMagoConversation.js'
+import { useScrollLock } from '../hooks/useScrollLock.js'
 import { EASE_ACCELERATE, EASE_DECELERATE } from '../motion/tokens.js'
 
 const MARGIN = 12
@@ -122,18 +123,7 @@ export default function MagoChat({ identity, onClose, getOriginRect, onOpenFolde
     return () => window.removeEventListener('resize', onResize)
   }, [vw, vh])
 
-  // Lock the page scroll while the chat is open.
-  useEffect(() => {
-    const body = document.body
-    const previous = { overflow: body.style.overflow, paddingRight: body.style.paddingRight }
-    const scrollbar = window.innerWidth - document.documentElement.clientWidth
-    body.style.overflow = 'hidden'
-    if (scrollbar > 0) body.style.paddingRight = `${scrollbar}px`
-    return () => {
-      body.style.overflow = previous.overflow
-      body.style.paddingRight = previous.paddingRight
-    }
-  }, [])
+  useScrollLock()
 
   // Close: content fades (150ms), then the panel morphs back into the input (300ms).
   const requestClose = async (after) => {
