@@ -5166,3 +5166,286 @@ a.btn {
 .empty-state--folder {
   margin-top: 139.5px;
 }
+
+/* ---------- Brand manual: Intro page (Figma node 6479:5446) ---------- */
+/* The hero is 1px under the gap below the title (as the intro text of the other pages); the
+   other blocks are 80px apart (the 48px column gap plus 32px). */
+.manual-intro-hero {
+  width: 100%;
+  margin-top: 1px;
+}
+
+.manual-intro-hero .manual-box,
+.manual-intro-hero.manual-box {
+  border-radius: 12px;
+}
+
+.manual-intro-hero--name {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.manual-intro-hero__name {
+  color: #000000;
+  white-space: nowrap;
+}
+
+.manual-intro--after-hero {
+  margin-top: 32px;
+}
+
+.intro-cards {
+  display: grid;
+  grid-template-columns: repeat(5, 183.2px);
+  gap: 40px 16px;
+  width: 980px;
+  margin-top: 32px;
+}
+
+.intro-card,
+.intro-card:link,
+.intro-card:visited,
+.intro-card:hover,
+.intro-card:active {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.intro-card__image {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 140px;
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+.intro-card:hover .intro-card__image,
+.intro-card:focus-visible .intro-card__image {
+  box-shadow: var(--shadow-card-hover);
+}
+
+.intro-card:focus-visible {
+  outline: none;
+}
+
+.intro-card__logo {
+  display: block;
+  width: 107.44px;
+  height: 83px;
+  object-fit: contain;
+}
+
+.intro-card__name {
+  font-weight: 700;
+  color: #000000;
+  white-space: nowrap;
+}
+
+.intro-card__icon {
+  display: block;
+  width: 143.2px;
+  height: 100px;
+  object-fit: contain;
+}
+
+.intro-card__stripes {
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+
+.intro-card__stripes span {
+  flex: 1 0 0;
+}
+
+.fit-lines {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fit-lines__sample {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.fit-lines__sample span {
+  display: block;
+  width: max-content;
+}
+
+.fit-lines__text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.intro-card__elements {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 8px;
+  width: 100%;
+  height: 100%;
+  padding: 20px;
+}
+
+.intro-card__element {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 0;
+}
+
+.intro-card__element-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.intro-card__glyphs {
+  position: absolute;
+  top: -9px;
+  left: -2.33px;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  align-items: center;
+  gap: 15px;
+  width: 180px;
+  height: 180px;
+}
+
+.intro-card__texts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  line-height: 1.3;
+  text-align: center;
+}
+
+.intro-card__title {
+  display: block;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.32px;
+  color: #000000;
+}
+
+.intro-card__text {
+  display: block;
+  font-size: 14px;
+  font-weight: 400;
+  color: #5d5d5d;
+}
+
+/* "Manual completo" section of the Intro page: 80px under the cards (48px gap plus 32px). */
+.manual-kit {
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-top: 32px;
+}
+
+.manual-kit .manual-h2 {
+  font-weight: 500;
+}
+
+.manual-kit__copy {
+  position: relative;
+  display: flex;
+}
+
+.manual-kit__copy .tooltip {
+  top: auto;
+  bottom: calc(100% + 8px);
+}
+
+/* Print view of the whole manual (the "Download PDF" button of the Intro page). On screen it
+   stays off the page; when printing it is the only thing shown. */
+.manual-print {
+  position: absolute;
+  top: 0;
+  left: -20000px;
+  display: flex;
+  flex-direction: column;
+  width: 980px;
+  min-width: 0;
+  min-height: 0;
+}
+
+.manual-print__page {
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+  width: 980px;
+  padding-bottom: 48px;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
+  html,
+  body {
+    min-width: 0;
+    background: #ffffff;
+  }
+
+  /* Only the print view is printed: no sidebar, kebab, navigation or hover buttons. */
+  body > #root {
+    display: none !important;
+  }
+
+  .manual-print {
+    position: static;
+    /* 980px x 0.7 = 686px: the 186mm of an A4 page between its 12mm margins is 703px. */
+    zoom: 0.7;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .manual-print__page {
+    break-before: page;
+    padding-bottom: 0;
+  }
+
+  .manual-print__page:first-child {
+    break-before: auto;
+  }
+
+  .manual-print .manual-kit,
+  .manual-print .manual-pager,
+  .manual-print .manual-box__download,
+  .manual-print .lib-tile__download {
+    display: none !important;
+  }
+
+  .manual-print .manual-box,
+  .manual-print .manual-block,
+  .manual-print .manual-row,
+  .manual-print .manual-misuse,
+  .manual-print .icon-app,
+  .manual-print .intro-card {
+    break-inside: avoid;
+  }
+}

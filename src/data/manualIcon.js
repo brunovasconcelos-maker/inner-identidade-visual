@@ -83,8 +83,8 @@ export function pickTileStyle(versions, palette) {
 // original icon: the principal hex of any palette color with the highest contrast against
 // the icon's highest chroma dominant color, skipping colors with a deltaE below 10 against
 // any dominant color of the icon. #FFFFFF when no palette color qualifies.
-export function pickAvatarBackground(dominant, palette) {
-  if (dominant.length === 0) return '#FFFFFF'
+export function pickAvatarBackground(dominant, palette, fallback = '#FFFFFF') {
+  if (dominant.length === 0) return fallback
   const target = dominant.reduce((top, color) => (labChroma(color.hex) > labChroma(top.hex) ? color : top)).hex
   let best = null
   for (const color of palette) {
@@ -93,5 +93,5 @@ export function pickAvatarBackground(dominant, palette) {
     const ratio = contrastRatio(target, hex)
     if (!best || ratio > best.ratio) best = { hex, ratio }
   }
-  return best ? best.hex : '#FFFFFF'
+  return best ? best.hex : fallback
 }

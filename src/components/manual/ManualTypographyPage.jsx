@@ -11,7 +11,7 @@ import {
 } from '../../data/manualTypography.js'
 import { pesosLabel, styleName } from '../../data/typography.js'
 import { downloadFamily, downloadWeight } from '../../utils/fontDownload.js'
-import { loadGoogleFamily, registerUploadedFont, uploadAlias } from '../../utils/fonts.js'
+import { useFontFamily } from '../../hooks/useFontFamily.js'
 
 // The size of the family name in the hero (Figma node 6508:9725) and the space kept on both
 // sides of it. The name shrinks from this size until it fits on one line.
@@ -19,28 +19,6 @@ const NAME_SIZE = 190
 const NAME_PADDING = 28
 // Baseline of the family name inside the 520px box, taken from the Figma frames.
 const NAME_BASELINE = 460
-
-// Registers or loads the font so the page can show it. Returns its CSS family.
-function useFontFamily(font) {
-  const [ready, setReady] = useState(false)
-  const alias = font.source === 'upload' ? uploadAlias(font.id) : null
-  useEffect(() => {
-    let alive = true
-    setReady(false)
-    const done = () => alive && setReady(true)
-    if (font.source === 'upload') registerUploadedFont(alias, font.weights).then(done)
-    else {
-      loadGoogleFamily(font.family, font.weights)
-      done()
-    }
-    return () => {
-      alive = false
-    }
-    // The font is identified by its id and family; its weights never change once saved.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [font.id, font.family])
-  return { css: alias ? `"${alias}", Inter, sans-serif` : `"${font.family}", Inter, sans-serif`, ready }
-}
 
 // A download that can fail (Google fonts are fetched): the button says so for a moment.
 function useDownload(run) {

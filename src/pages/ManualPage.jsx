@@ -2,6 +2,8 @@ import { useLayoutEffect } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { DotsThreeVertical } from '@phosphor-icons/react'
 import ManualPager from '../components/manual/ManualPager.jsx'
+import ManualIntroPage from '../components/manual/ManualIntroPage.jsx'
+import ManualKit from '../components/manual/ManualKit.jsx'
 import ManualSidebar from '../components/manual/ManualSidebar.jsx'
 import ManualLogoPage from '../components/manual/ManualLogoPage.jsx'
 import ManualIconPage from '../components/manual/ManualIconPage.jsx'
@@ -45,15 +47,14 @@ export default function ManualPage() {
   const brandHex = brand ? principalHex(brand) : '#1A1A1A'
   const meta = MANUAL_SECTIONS.find((item) => item.slug === section)
 
+  const themeStyle = {
+    '--manual-select-bg': selection.background,
+    '--manual-select-fg': selection.foreground,
+    '--manual-brand': brandHex,
+  }
+
   return (
-    <div
-      className="manual"
-      style={{
-        '--manual-select-bg': selection.background,
-        '--manual-select-fg': selection.foreground,
-        '--manual-brand': brandHex,
-      }}
-    >
+    <div className="manual" style={themeStyle}>
       <aside className="manual-side">
         <div className="manual-side__logo">
           {/* The logo goes to Intro, at the top of the page. */}
@@ -80,11 +81,13 @@ export default function ManualPage() {
       </button>
       <main className="manual-main">
         <h1 className="manual-title">{meta.label}</h1>
+        {section === 'intro' ? <ManualIntroPage identity={identity} /> : null}
         {section === 'logo' ? <ManualLogoPage identity={identity} sub={sub} /> : null}
         {section === 'icone' ? <ManualIconPage identity={identity} /> : null}
         {section === 'biblioteca-de-icones' ? <ManualLibraryPage identity={identity} /> : null}
         {section === 'paleta-de-cores' ? <ManualPalettePage identity={identity} sub={sub} /> : null}
         {section === 'tipografia' ? <ManualTypographyPage identity={identity} sub={sub} /> : null}
+        {section === 'intro' ? <ManualKit identity={identity} themeStyle={themeStyle} /> : null}
         <ManualPager identity={identity} slug={section} />
       </main>
     </div>

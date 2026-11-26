@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useObjectUrl } from '../../hooks/useObjectUrl.js'
 import { contrastRatio } from '../../data/manualPalette.js'
 import {
@@ -8,10 +8,10 @@ import {
   faviconAddress,
   pickAvatarBackground,
   pickTileStyle,
-  versionKey,
 } from '../../data/manualIcon.js'
+import { useIconVersions } from '../../hooks/useIconVersions.js'
 import { downloadLogoVersions, saveBlob } from '../../utils/download.js'
-import { dominantColor, dominantColors, fitInCircle, visibleBounds } from '../../utils/imageColor.js'
+import { dominantColors, fitInCircle, visibleBounds } from '../../utils/imageColor.js'
 import { BOX_DARK, BOX_LIGHT, ImageBox, OriginalBox } from './ManualImageBox.jsx'
 import FaviconMockup from './FaviconMockup.jsx'
 
@@ -21,34 +21,6 @@ const BOX = { width: 580, height: 360 }
 const HERO = [225.045, 280]
 const VARIANT = [160.746, 200]
 const WHITE = '#FFFFFF'
-
-// Versions of the icon (original first, then each monochrome) with their dominant color.
-function useVersions(icon) {
-  const [colors, setColors] = useState({})
-  const monos = icon.monoVersions || []
-  const list = useMemo(
-    () => [
-      { key: versionKey(0), file: icon.file },
-      ...monos.map((version, index) => ({ key: versionKey(index + 1), file: version.file })),
-    ],
-    [icon.file, monos],
-  )
-  useEffect(() => {
-    let alive = true
-    Promise.all(list.map((item) => dominantColor(item.file).catch(() => '#000000'))).then((values) => {
-      if (!alive) return
-      const next = {}
-      list.forEach((item, index) => {
-        next[item.key] = values[index]
-      })
-      setColors(next)
-    })
-    return () => {
-      alive = false
-    }
-  }, [list])
-  return list.map((item) => ({ ...item, color: colors[item.key] || null }))
-}
 
 function useBounds(file) {
   const [bounds, setBounds] = useState(null)
@@ -185,7 +157,7 @@ function Application({ title, text, children }) {
 export default function ManualIconPage({ identity }) {
   const icon = identity.icones[0]
   const monoVersions = icon.monoVersions || []
-  const versions = useVersions(icon)
+  const versions = useIconVersions(icon)
   const ready = versions.every((version) => version.color)
   const style = ready ? pickTileStyle(versions, identity.paleta) : null
   // Avatars use the original icon on a palette color picked against its dominant colors.
