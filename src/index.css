@@ -711,10 +711,6 @@ button {
   white-space: nowrap;
 }
 
-.breadcrumb__caret {
-  display: flex;
-}
-
 .detail-title {
   margin-top: 60.5px;
   font-size: 24px;
@@ -1997,12 +1993,12 @@ button {
   padding: 0 16px;
 }
 
-.selection-bar__share {
+.selection-bar__action {
   position: relative;
   display: flex;
 }
 
-/* "Em breve" tooltip of the share action. */
+/* Small tooltip of the toolbar and viewer actions (download notes, copied). */
 .tooltip {
   position: absolute;
   top: calc(100% + 4px);
@@ -2090,7 +2086,7 @@ button {
   gap: 12px;
 }
 
-.viewer__share {
+.viewer__action {
   position: relative;
   display: flex;
 }

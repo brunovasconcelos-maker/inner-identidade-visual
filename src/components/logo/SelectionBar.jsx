@@ -1,15 +1,12 @@
-import { DownloadSimple, Share, Trash, X } from '@phosphor-icons/react'
+import { DownloadSimple, Trash, X } from '@phosphor-icons/react'
 
 // Replaces the total text while at least one logo is selected.
 export default function SelectionBar({
   count,
-  shareTip,
   onClear,
   onDelete,
   onDownload,
-  onShare,
   onlyDelete = false,
-  hideShare = false,
   downloadTip = null,
 }) {
   return (
@@ -26,20 +23,12 @@ export default function SelectionBar({
         </button>
         {onlyDelete ? null : (
           <>
-            <span className="selection-bar__share">
+            <span className="selection-bar__action">
               <button type="button" className="selection-bar__btn" aria-label="Baixar" onClick={onDownload}>
                 <DownloadSimple size={20} color="#5d5d5d" weight="regular" />
               </button>
               {downloadTip ? <span className="tooltip">{downloadTip}</span> : null}
             </span>
-            {hideShare ? null : (
-              <span className="selection-bar__share">
-                <button type="button" className="selection-bar__btn" aria-label="Compartilhar" onClick={onShare}>
-                  <Share size={20} color="#5d5d5d" weight="regular" />
-                </button>
-                {shareTip ? <span className="tooltip">Em breve</span> : null}
-              </span>
-            )}
           </>
         )}
       </div>

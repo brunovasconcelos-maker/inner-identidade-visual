@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import {
   AnimatePresence,
@@ -12,7 +12,7 @@ import {
 import { ArrowUp, Plus, X } from '@phosphor-icons/react'
 import MagoAvatar from './MagoAvatar'
 import MagoThread from './MagoThread'
-import { getConversation, isAnswering, sendMessage, setDraft, subscribe } from '../data/magoChatStore.js'
+import { useMagoConversation } from '../hooks/useMagoConversation.js'
 import { EASE_ACCELERATE, EASE_DECELERATE } from '../motion/tokens.js'
 
 const MARGIN = 12
@@ -41,12 +41,9 @@ const itemVariantsReduced = {
 // The panel morphs from the page input (getOriginRect) to the full panel and back.
 export default function MagoChat({ identity, onClose, getOriginRect, onOpenFolder }) {
   const reduced = useReducedMotion()
-  const conversation = useSyncExternalStore(
-    subscribe,
-    () => getConversation(identity.id),
-  )
-  const { messages, draft: value, pending } = conversation
-  const initialCount = useRef(messages.length).current
+  // The conversation lives only while the chat is open: closing it drops everything.
+  const conversation = useMagoConversation(identity)
+  const { messages, draft: value, pending, answering } = conversation
   const [inputExtra, setInputExtra] = useState(0)
   const hasConversation = messages.length > 0 || pending > 0
   const [contentVisible, setContentVisible] = useState(false)
@@ -143,6 +140,8 @@ export default function MagoChat({ identity, onClose, getOriginRect, onOpenFolde
     if (closingRef.current) return
     closingRef.current = true
     openAnim.current?.stop()
+    // Closing cancels a pending answer: nothing is added or played afterwards.
+    conversation.cancel()
     setPulseOn(false)
     setContentVisible(false)
     if (reduced) {
@@ -176,12 +175,11 @@ export default function MagoChat({ identity, onClose, getOriginRect, onOpenFolde
   }, [])
 
   // Disabled while the Mago is answering; typing is still allowed.
-  const answering = isAnswering(conversation)
   const canSend = value.trim().length > 0 && !answering
 
   const send = () => {
     if (!canSend) return
-    sendMessage(identity, value)
+    conversation.send(value)
     focusInput()
   }
 
@@ -269,7 +267,7 @@ export default function MagoChat({ identity, onClose, getOriginRect, onOpenFolde
               <MagoThread
                 messages={messages}
                 pending={pending}
-                initialCount={initialCount}
+                onFinish={conversation.finishMessage}
                 identityId={identity.id}
                 bottomExtra={inputExtra}
                 onOpenFolder={(slug) => requestClose(() => onOpenFolder(slug))}
@@ -288,7 +286,7 @@ export default function MagoChat({ identity, onClose, getOriginRect, onOpenFolde
                   rows={1}
                   placeholder="Digite sua busca aqui..."
                   value={value}
-                  onChange={(event) => setDraft(identity.id, event.target.value)}
+                  onChange={(event) => conversation.setDraft(event.target.value)}
                   onKeyDown={onKeyDown}
                 />
                 <button

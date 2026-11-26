@@ -68,7 +68,7 @@ export default function FolderPage() {
   const [uploadError, setUploadError] = useState(null)
   const [selectedIds, setSelectedIds] = useState([]) // selected logo cards
   const [menuLogoId, setMenuLogoId] = useState(null) // logo card with its kebab menu open
-  const [shareTip, setShareTip] = useState(null) // 'toolbar' or a logo id
+  const [tip, setTip] = useState(null) // 'download-skipped' or `copy:[color id]`
   const [deleteTarget, setDeleteTarget] = useState(null) // logo ids waiting for confirmation
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState(null)
@@ -79,7 +79,7 @@ export default function FolderPage() {
   const [fontModal, setFontModal] = useState(null) // "Nova tipografia": { mode, type, font }
   const [libraryModal, setLibraryModal] = useState(null) // "Nova biblioteca": { mode, libraryId | file, name, count }
   const [chooser, setChooser] = useState(null) // type chooser: 'logo' | 'font-upload' | 'font-google'
-  const shareTimer = useRef(null)
+  const tipTimer = useRef(null)
 
   // Logo and Ícone share the whole flow (cards, upload modal, viewer, actions).
   const kind = kindForSection(section)
@@ -187,7 +187,7 @@ export default function FolderPage() {
     return () => document.removeEventListener('keydown', onKeyDown)
   }, [deleteTarget, deleting, upload, searchOpen, selectedIds, viewerId, paletteOpen, generateOpen, fontModal, libraryModal, chooser])
 
-  useEffect(() => () => clearTimeout(shareTimer.current), [])
+  useEffect(() => () => clearTimeout(tipTimer.current), [])
 
   const closeMenu = useCallback(() => setMenuLogoId(null), [])
 
@@ -288,11 +288,11 @@ export default function FolderPage() {
     )
   }
 
-  // No backend yet: sharing only shows a short "Em breve" tooltip.
-  function showShareTip(key) {
-    setShareTip(key)
-    clearTimeout(shareTimer.current)
-    shareTimer.current = setTimeout(() => setShareTip(null), 2000)
+  // Short tooltips (skipped Google fonts, copied hex) that disappear by themselves.
+  function showTip(key) {
+    setTip(key)
+    clearTimeout(tipTimer.current)
+    tipTimer.current = setTimeout(() => setTip(null), 2000)
   }
 
   async function handleDownload(ids) {
@@ -364,7 +364,7 @@ export default function FolderPage() {
     }
     try {
       const { skipped } = await downloadFonts(identity.name, list)
-      if (skipped > 0) showShareTip('download-skipped')
+      if (skipped > 0) showTip('download-skipped')
     } catch (error) {
       console.error('Could not download', error)
     }
@@ -388,14 +388,13 @@ export default function FolderPage() {
       } catch (error) {
         console.error('Could not copy', error)
       }
-      showShareTip(`copy:${color.id}`)
+      showTip(`copy:${color.id}`)
     }
   }
 
   function handleCardAction(action, logo) {
     setMenuLogoId(null)
     if (action === 'download') handleDownload([logo.id])
-    else if (action === 'share') showShareTip(logo.id)
     else if (action === 'delete') setDeleteTarget([logo.id])
     else if (action === 'edit') setViewerId(logo.id)
   }
@@ -450,9 +449,7 @@ export default function FolderPage() {
             <SelectionBar
               count={selectedIds.length}
               onlyDelete={isPalette}
-              hideShare={isTypo || isLibrary}
-              downloadTip={isTypo && shareTip === 'download-skipped' ? 'Fontes do Google não incluídas' : null}
-              shareTip={shareTip === 'toolbar'}
+              downloadTip={isTypo && tip === 'download-skipped' ? 'Fontes do Google não incluídas' : null}
               onClear={() => setSelectedIds([])}
               onDelete={() => setDeleteTarget(selectedIds)}
               onDownload={() =>
@@ -462,7 +459,6 @@ export default function FolderPage() {
                     ? downloadFontsOf(fonts.filter((font) => selectedIds.includes(font.id)))
                     : handleDownload(selectedIds)
               }
-              onShare={() => showShareTip('toolbar')}
             />
           ) : (
             <p className="toolbar__total">
@@ -565,7 +561,7 @@ export default function FolderPage() {
                 selected={selectedIds.includes(entry.color.id)}
                 selecting={selectedIds.length > 0}
                 menuOpen={menuLogoId === entry.color.id}
-                copiedTip={shareTip === `copy:${entry.color.id}`}
+                copiedTip={tip === `copy:${entry.color.id}`}
                 onToggleSelect={toggleSelect}
                 onOpenMenu={setMenuLogoId}
                 onCloseMenu={closeMenu}
@@ -584,7 +580,6 @@ export default function FolderPage() {
                 selected={selectedIds.includes(logo.id)}
                 selecting={selectedIds.length > 0}
                 menuOpen={menuLogoId === logo.id}
-                shareTip={shareTip === logo.id}
                 onToggleSelect={toggleSelect}
                 onOpenMenu={setMenuLogoId}
                 onCloseMenu={closeMenu}
@@ -645,11 +640,9 @@ export default function FolderPage() {
           logoId={viewerId}
           kind={kind}
           deleteOpen={Boolean(deleteTarget)}
-          shareTip={shareTip === 'viewer'}
           onChangeLogo={setViewerId}
           onClose={() => setViewerId(null)}
           onDelete={(logo) => setDeleteTarget([logo.id])}
-          onShare={() => showShareTip('viewer')}
           onUpdate={(logoId, changes, rights) =>
             updateLogo(identity.id, logoId, changes, rights, kind.key)
           }

@@ -3,7 +3,6 @@ import {
   CheckSquare,
   DotsThreeVertical,
   DownloadSimple,
-  Export,
   PencilSimple,
   Square,
   Trash,
@@ -16,7 +15,6 @@ import { formatDate } from '../../utils/format.js'
 const MENU_ITEMS = [
   { action: 'edit', label: 'Editar', Icon: PencilSimple },
   { action: 'download', label: 'Baixar', Icon: DownloadSimple },
-  { action: 'share', label: 'Compartilhar', Icon: Export },
   { action: 'delete', label: 'Excluir', Icon: Trash },
 ]
 
@@ -34,7 +32,6 @@ export default function LogoCard({
   selected,
   selecting,
   menuOpen,
-  shareTip,
   onToggleSelect,
   onOpenMenu,
   onCloseMenu,
@@ -145,7 +142,6 @@ export default function LogoCard({
                 ))}
               </div>
             ) : null}
-            {shareTip ? <span className="tooltip tooltip--end">Em breve</span> : null}
           </div>
         </div>
 

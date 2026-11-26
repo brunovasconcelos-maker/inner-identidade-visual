@@ -288,7 +288,7 @@ export default function FontViewer({ identity, fonts, fontId, deleteOpen, onChan
         <button type="button" className="viewer__round" aria-label="Excluir" onClick={() => onDelete(font)}>
           <Trash size={20} color="#000000" weight="regular" />
         </button>
-        <span className="viewer__share">
+        <span className="viewer__action">
           <button type="button" className="viewer__round" aria-label="Baixar" onClick={download}>
             <DownloadSimple size={20} color="#000000" weight="regular" />
           </button>

@@ -3,7 +3,6 @@ import { motion, useReducedMotion } from 'framer-motion'
 import { Check, Copy, DownloadSimple, FileArchive, TrademarkRegistered } from '@phosphor-icons/react'
 import { useObjectUrl } from '../hooks/useObjectUrl.js'
 import { findLogoType } from '../data/logoTypes.js'
-import { finishMessage } from '../data/magoChatStore.js'
 import { blocksFor } from '../data/magoAnswers.js'
 import { isVeryLight } from '../data/palette.js'
 import { saveBlob } from '../utils/download.js'
@@ -346,7 +345,7 @@ function stepsFor(answer) {
   return steps
 }
 
-function Answer({ identityId, message, onOpenFolder }) {
+function Answer({ identityId, message, onOpenFolder, onFinish }) {
   const reduced = useReducedMotion()
   const { answer } = message
   const steps = useMemo(() => stepsFor(answer), [answer])
@@ -357,17 +356,17 @@ function Answer({ identityId, message, onOpenFolder }) {
   useEffect(() => {
     if (stage >= steps.length && !finished.current) {
       finished.current = true
-      finishMessage(identityId, message.id)
+      onFinish(message.id)
     }
-  }, [stage, steps.length, identityId, message.id])
+  }, [stage, steps.length, message.id, onFinish])
   useEffect(
     () => () => {
       if (!finished.current) {
         finished.current = true
-        finishMessage(identityId, message.id)
+        onFinish(message.id)
       }
     },
-    [identityId, message.id],
+    [message.id, onFinish],
   )
 
   const modeOf = (index) => (index > stage ? null : index === stage ? 'active' : 'done')
@@ -415,12 +414,12 @@ function Answer({ identityId, message, onOpenFolder }) {
   return <div className="mago-msg__mago-stack">{nodes}</div>
 }
 
-function Message({ message, animate, identityId, onOpenFolder }) {
+function Message({ message, identityId, onOpenFolder, onFinish }) {
   const user = message.role === 'user'
   return (
     <motion.div
       className={`mago-msg ${user ? 'mago-msg--user' : 'mago-msg--mago'}`}
-      initial={animate && user ? { opacity: 0, y: 8 } : false}
+      initial={user ? { opacity: 0, y: 8 } : false}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: DECELERATE }}
     >
@@ -430,7 +429,7 @@ function Message({ message, animate, identityId, onOpenFolder }) {
           <span className="mago-msg__time mago-msg__time--right">{message.time}</span>
         </div>
       ) : (
-        <Answer identityId={identityId} message={message} onOpenFolder={onOpenFolder} />
+        <Answer identityId={identityId} message={message} onOpenFolder={onOpenFolder} onFinish={onFinish} />
       )}
     </motion.div>
   )
@@ -454,7 +453,7 @@ function Typing() {
 }
 
 // The conversation below the "Hoje" pill. Keeps the newest content in view.
-export default function MagoThread({ messages, pending, initialCount, identityId, onOpenFolder, bottomExtra }) {
+export default function MagoThread({ messages, pending, identityId, onOpenFolder, onFinish, bottomExtra }) {
   const reduced = useReducedMotion()
   const scroller = useRef(null)
   const column = useRef(null)
@@ -495,11 +494,11 @@ export default function MagoThread({ messages, pending, initialCount, identityId
   return (
     <div className="mago-thread" ref={scroller} style={{ bottom: 86 + bottomExtra }} onWheel={onWheel} onScroll={onScroll}>
       <div className="mago-thread__column" ref={column}>
-        {messages.map((message, index) => (
+        {messages.map((message) => (
           <Message
             key={message.id}
             message={message}
-            animate={index >= initialCount}
+            onFinish={onFinish}
             identityId={identityId}
             onOpenFolder={onOpenFolder}
           />

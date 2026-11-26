@@ -81,11 +81,9 @@ export default function LogoViewer({
   logoId,
   kind = ASSET_KINDS.logo,
   deleteOpen,
-  shareTip,
   onChangeLogo,
   onClose,
   onDelete,
-  onShare,
   onUpdate,
 }) {
   const index = logos.findIndex((item) => item.id === logoId)
@@ -230,8 +228,6 @@ export default function LogoViewer({
 
       <ViewerActions
         onDelete={() => onDelete(logo)}
-        onShare={onShare}
-        shareTip={shareTip}
         onDownload={() => saveBlob(featuredFile, featuredName)}
       />
 
