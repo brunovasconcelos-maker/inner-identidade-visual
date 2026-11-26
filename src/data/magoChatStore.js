@@ -74,7 +74,7 @@ export function sendMessage(identity, rawText) {
     const startedAt = Date.now()
     let answer
     try {
-      answer = await answerFor(text, identity)
+      answer = await answerFor(text, identity, getConversation(id).messages)
     } catch (error) {
       console.error('Mago could not answer', error)
       answer = { kind: 'unknown', text: 'Não consegui buscar isso agora. Tente de novo.' }

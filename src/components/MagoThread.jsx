@@ -274,7 +274,8 @@ function ColorChip({ chip, shown, instant }) {
         style={{ background: chip.hex, boxShadow: isVeryLight(chip.hex) ? 'inset 0 0 0 1px #dedede' : undefined }}
       />
       <span className="mago-chip__hex">{chip.hex}</span>
-      {chip.name && <span className="mago-chip__name">{chip.name}</span>}
+      {chip.step && <span className="mago-chip__step">{`· ${chip.step}`}</span>}
+      {chip.step && chip.main && <span className="mago-chip__step">(principal)</span>}
       {copied ? (
         <Check size={20} color="#5d5d5d" weight="regular" />
       ) : (
