@@ -40,10 +40,10 @@ const itemVariantsReduced = {
 
 // Mago chat overlay, first state (empty chat). Sending is not built yet.
 // The panel morphs from the page input (getOriginRect) to the full panel and back.
-export default function MagoChat({ identity, onClose, getOriginRect, onOpenFolder }) {
+export default function MagoChat({ identity, onClose, getOriginRect, onOpenFolder, initialDraft = '' }) {
   const reduced = useReducedMotion()
   // The conversation lives only while the chat is open: closing it drops everything.
-  const conversation = useMagoConversation(identity)
+  const conversation = useMagoConversation(identity, initialDraft)
   const { messages, draft: value, pending, answering } = conversation
   const [inputExtra, setInputExtra] = useState(0)
   const hasConversation = messages.length > 0 || pending > 0
@@ -80,7 +80,13 @@ export default function MagoChat({ identity, onClose, getOriginRect, onOpenFolde
   const backdropOpacity = useTransform(progress, (p) => clamp01(p))
   const backdropBlur = useTransform(progress, (p) => `blur(${clamp01(p) * 8}px)`)
 
-  const focusInput = () => inputRef.current?.focus({ preventScroll: true })
+  const focusInput = () => {
+    const el = inputRef.current
+    if (!el) return
+    el.focus({ preventScroll: true })
+    // The caret goes after any text the chat starts with.
+    el.setSelectionRange(el.value.length, el.value.length)
+  }
 
   // Content shows once the panel is about 70% open.
   useMotionValueEvent(progress, 'change', (p) => {

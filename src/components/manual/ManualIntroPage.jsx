@@ -24,7 +24,6 @@ import {
   typographyBackground,
 } from '../../data/manualIntro.js'
 import { recolorSingleColor, zipSvgs } from '../../utils/iconZip.js'
-import { ImageBox } from './ManualImageBox.jsx'
 import FitLines from './FitLines.jsx'
 
 const LIBRARY_ICONS = 25 // 5 columns x 5 rows of 24px icons with 15px gaps, as in Figma
@@ -48,6 +47,17 @@ function NameMark({ identity, size, className }) {
     <span className={className} style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: size, letterSpacing: '-0.04em' }}>
       {identity.name}
     </span>
+  )
+}
+
+// The hero is only a cover: the logo contained and centered, no actions on hover.
+function CoverBox({ file, background, label }) {
+  const url = useObjectUrl(file)
+  const [width, height] = LOGO_SECTIONS.principal.hero
+  return (
+    <div className="manual-box" style={{ background, height: 420 }}>
+      {url ? <img className="manual-box__img" style={{ width, height }} src={url} alt={label} /> : null}
+    </div>
   )
 }
 
@@ -215,14 +225,7 @@ export default function ManualIntroPage({ identity }) {
     <>
       {logo ? (
         <div className="manual-intro-hero">
-          <ImageBox
-            file={logo.file}
-            fileName={logo.fileName}
-            bg={hero}
-            height={420}
-            inner={LOGO_SECTIONS.principal.hero}
-            label={identity.name}
-          />
+          <CoverBox file={logo.file} background={hero} label={identity.name} />
         </div>
       ) : (
         <div className="manual-box manual-intro-hero manual-intro-hero--name" style={{ background: hero, height: 420 }}>

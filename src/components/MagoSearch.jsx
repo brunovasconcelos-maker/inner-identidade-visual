@@ -4,24 +4,39 @@ import { ArrowUp, Plus } from '@phosphor-icons/react'
 import MagoAvatar from './MagoAvatar'
 import MagoChat from './MagoChat'
 
-// Clicking or focusing the input opens the Mago chat overlay.
+// The Mago chat opens on a real user action on the input: a click or tap, a typed character
+// (it becomes the first character of the chat input), a paste or Enter. Focus alone never opens
+// it: the browser focuses the input by itself when the window comes back (switching tabs or
+// apps), and closing the chat leaves the input without focus.
 export default function MagoSearch({ identity }) {
-  const [open, setOpen] = useState(false)
+  const [chat, setChat] = useState(null) // null (closed) or { initial } (the text it starts with)
   const navigate = useNavigate()
   const inputRef = useRef(null)
-  const skipOpen = useRef(false)
   const fieldRef = useRef(null)
 
+  const openChat = (initial = '') => setChat({ initial })
+
   const handleClose = () => {
-    setOpen(false)
-    // Return focus to the page input without reopening the chat.
-    skipOpen.current = true
-    inputRef.current?.focus()
-    skipOpen.current = false
+    setChat(null)
+    // Not back on the page input: a focused input would take the browser focus back when the
+    // window returns.
+    inputRef.current?.blur()
   }
 
-  const openChat = () => {
-    if (!skipOpen.current) setOpen(true)
+  const onKeyDown = (event) => {
+    if (event.ctrlKey || event.metaKey || event.altKey || event.isComposing) return
+    if (event.key === 'Enter') {
+      event.preventDefault()
+      openChat()
+    } else if (event.key.length === 1) {
+      event.preventDefault()
+      openChat(event.key)
+    }
+  }
+
+  const onPaste = (event) => {
+    event.preventDefault()
+    openChat(event.clipboardData.getData('text'))
   }
 
   return (
@@ -39,19 +54,23 @@ export default function MagoSearch({ identity }) {
           className="mago__input"
           type="text"
           placeholder="Digite sua busca aqui..."
-          onFocus={openChat}
-          onClick={openChat}
+          onClick={() => openChat()}
+          onKeyDown={onKeyDown}
+          onPaste={onPaste}
         />
         <div className="mago__send">
           <ArrowUp size={20} color="#798282" weight="regular" />
         </div>
       </div>
-      {open && <MagoChat
+      {chat && (
+        <MagoChat
           identity={identity}
+          initialDraft={chat.initial}
           onClose={handleClose}
           onOpenFolder={(slug) => navigate(`/id/${identity.id}/${slug}`)}
           getOriginRect={() => fieldRef.current.getBoundingClientRect()}
-        />}
+        />
+      )}
     </div>
   )
 }

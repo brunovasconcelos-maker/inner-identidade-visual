@@ -16,8 +16,8 @@ export function isAnswering({ messages, pending }) {
   return pending > 0 || messages.some((m) => m.role === 'mago' && !m.done)
 }
 
-export function useMagoConversation(identity) {
-  const [state, setState] = useState({ messages: [], draft: '', pending: 0 })
+export function useMagoConversation(identity, initialDraft = '') {
+  const [state, setState] = useState({ messages: [], draft: initialDraft, pending: 0 })
   const stateRef = useRef(state)
   stateRef.current = state
   const identityRef = useRef(identity)
